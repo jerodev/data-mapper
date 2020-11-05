@@ -47,7 +47,7 @@ class DataType
         ], true);
     }
 
-    public static function parse(string $type, bool $isNullable = false): self
+    public static function parse(string $type, bool $forceNullable = false): self
     {
         $isArray = false;
         if (\substr($type, -2) === '[]') {
@@ -55,11 +55,11 @@ class DataType
             $type = \substr($type, 0, \strlen($type) - 2);
         }
 
-        if (! $isNullable && \substr($type, '0', 1) === '?') {
-            $isNullable = true;
+        if (\substr($type, '0', 1) === '?') {
+            $forceNullable = true;
             $type = \substr($type, 1);
         }
 
-        return new self($type, $isArray, $isNullable);
+        return new self($type, $isArray, $forceNullable);
     }
 }

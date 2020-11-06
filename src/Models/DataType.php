@@ -47,6 +47,15 @@ class DataType
         ], true);
     }
 
+    public function clone(?bool $isArray = null, ?bool $isNullable = null): self
+    {
+        return new DataType(
+            $this->type,
+            $isArray ?? $this->isArray(),
+            $isNullable ?? $this->isNullable(),
+        );
+    }
+
     public static function parse(string $type, bool $forceNullable = false): self
     {
         $isArray = false;

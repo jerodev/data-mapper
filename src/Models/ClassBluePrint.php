@@ -15,6 +15,16 @@ class ClassBluePrint
         $this->properties = [];
     }
 
+    public function getClassName(): string
+    {
+        return $this->className;
+    }
+
+    public function getProperties(): array
+    {
+        return $this->properties;
+    }
+
     public function addProperty(PropertyBluePrint $property): void
     {
         $this->properties[$property->getPropertyName()] = $property;

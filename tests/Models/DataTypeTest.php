@@ -1,6 +1,6 @@
 <?php
 
-namespace Jerodev\DataMapper\Tests;
+namespace Jerodev\DataMapper\Tests\Models;
 
 use Generator;
 use Jerodev\DataMapper\Models\DataType;
@@ -36,5 +36,6 @@ final class DataTypeTest extends TestCase
         yield ['array', 'array', false, false];
         yield ['int[]', 'int', true, false];
         yield ['?int', 'int', false, true];
+        yield ['?int[]', 'int', true, true];
     }
 }

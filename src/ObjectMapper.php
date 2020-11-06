@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper;
 
+use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Models\ClassBluePrint;
 use ReflectionProperty;
 use Throwable;
@@ -20,30 +21,26 @@ class ObjectMapper
     public function map(string $className, array $data): object
     {
         $bluePrint = $this->bluePrinter->print($className);
+        $className = $bluePrint->getClassName();
 
-        // TODO: check if class has constructor
+        // If the class has a constructor, try passing the required parameters
+        if (! empty($bluePrint->getConstructorProperties())) {
+            $object = $this->createObjectThroughConstructor($bluePrint, $data);
+        } else {
+            $object = new $className();
+        }
 
-        return $this->mapObjectProperties($bluePrint, $data);
+        return $this->mapObjectProperties($object, $bluePrint, $data);
     }
 
-    /**
-     * Map an object of a certain class.
-     *
-     * @param ClassBluePrint $bluePrint
-     * @param array $data
-     * @return object
-     */
-    private function mapObjectProperties(ClassBluePrint $bluePrint, array $data): object
+    private function mapObjectProperties(object $object, ClassBluePrint $bluePrint, array $data): object
     {
-        $className = $bluePrint->getClassName();
-        $object = new $className();
-
         foreach ($bluePrint->getProperties() as $property) {
             if (! \array_key_exists($property->getPropertyName(), $data)) {
                 continue;
             }
 
-            $reflectionProperty = new ReflectionProperty($className, $property->getPropertyName());
+            $reflectionProperty = new ReflectionProperty($bluePrint->getClassName(), $property->getPropertyName());
             foreach ($property->getTypes() as $type) {
                 try {
                     $object->{$property->getPropertyName()} = $this->mapper->map($type, $data[$property->getPropertyName()]);
@@ -59,5 +56,23 @@ class ObjectMapper
         }
 
         return $object;
+    }
+
+    private function createObjectThroughConstructor(ClassBluePrint $bluePrint, array $data): object
+    {
+        $constructorValues = [];
+
+        foreach ($bluePrint->getConstructorProperties() as $constructorProperty) {
+            if (\array_key_exists($constructorProperty->getName(), $data)) {
+                $constructorValues[] = $this->mapper->map($constructorProperty->getType(), $data[$constructorProperty->getName()]);
+            } else if (! $constructorProperty->isRequired()) {
+                $constructorValues[] = $constructorProperty->getDefaultValue();
+            } else {
+                throw new ConstructorParameterMissingException($bluePrint->getClassName(), $constructorProperty->getName());
+            }
+        }
+
+        $className = $bluePrint->getClassName();
+        return new $className(...$constructorValues);
     }
 }

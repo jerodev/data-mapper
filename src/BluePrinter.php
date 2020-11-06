@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper;
 use Jerodev\DataMapper\Exceptions\ClassNotFoundException;
 use Jerodev\DataMapper\Models\ClassBluePrint;
 use Jerodev\DataMapper\Models\DataType;
+use Jerodev\DataMapper\Models\MethodParameter;
 use Jerodev\DataMapper\Models\PropertyBluePrint;
 use ReflectionClass;
 use ReflectionProperty;
@@ -44,6 +45,23 @@ class BluePrinter
         $bluePrint = new ClassBluePrint($fqcn);
 
         $reflection = new ReflectionClass($fqcn);
+
+        // Map constructor
+        $constructor = $reflection->getConstructor();
+        if ($constructor !== null) {
+            foreach ($constructor->getParameters() as $parameter) {
+                $bluePrint->addConstructorProperty(
+                    new MethodParameter(
+                        $parameter->getName(),
+                        $parameter->getType() === null ? null : DataType::parse($parameter->getType()),
+                        ! $parameter->isDefaultValueAvailable(),
+                        $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null,
+                    )
+                );
+            }
+        }
+
+        // Map properties
         foreach ($reflection->getProperties() as $property) {
             $bluePrint->addProperty(
                 $this->printProperty($property)

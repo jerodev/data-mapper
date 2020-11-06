@@ -3,8 +3,10 @@
 namespace Jerodev\DataMapper\Tests;
 
 use Jerodev\DataMapper\BluePrinter;
+use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\ObjectMapper;
+use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\ExtendedClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
@@ -22,6 +24,20 @@ final class ObjectMapperTest extends TestCase
             new Mapper(),
             new BluePrinter(),
         );
+    }
+
+    /** @test */
+    public function it_should_map_constructor_parameters(): void
+    {
+        $result = $this->mapper->map(ConstructorClass::class, [
+            'foo' => 'foo',
+            'baz' => 'boo',
+        ]);
+        \assert($result instanceof ConstructorClass);
+
+        $this->assertEquals('foo', $result->foo);
+        $this->assertEquals('bar', $result->bar);
+        $this->assertEquals('boo', $result->baz);
     }
 
     /** @test */
@@ -71,5 +87,16 @@ final class ObjectMapperTest extends TestCase
         $this->assertEquals(7, $result->number);
         $this->assertEquals(3.14, $result->floatingPoint);
         $this->assertTrue($result->checkbox);
+    }
+
+    /** @test */
+    public function it_should_throw_error_on_missing_constructor_parameter(): void
+    {
+        $this->expectException(ConstructorParameterMissingException::class);
+
+        $this->mapper->map(ConstructorClass::class, [
+            'bar' => 'baa',
+            'baz' => 'boo',
+        ]);
     }
 }

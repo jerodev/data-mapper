@@ -7,7 +7,6 @@ use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\ObjectMapper;
 use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
-use Jerodev\DataMapper\Tests\TestClasses\ExtendedClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
 use PHPUnit\Framework\TestCase;
@@ -43,11 +42,14 @@ final class ObjectMapperTest extends TestCase
     /** @test */
     public function it_should_map_parent_class_properties(): void
     {
-        $result = $this->mapper->map(ExtendedClass::class, [
+        $class = new class extends SimpleClass {
+            public string $extended;
+        };
+
+        $result = $this->mapper->map(\get_class($class), [
             'extended' => 112,
             'foo' => 'bar',
         ]);
-        \assert($result instanceof ExtendedClass);
 
         $this->assertEquals('112', $result->extended);
         $this->assertEquals('bar', $result->foo);

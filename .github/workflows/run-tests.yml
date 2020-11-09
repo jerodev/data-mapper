@@ -12,7 +12,8 @@ jobs:
         php:
           - 7.4
           - 8.0
-        os: ubuntu-latest
+        os:
+          - ubuntu-latest
 
     name: PHP${{ matrix.php }}
 

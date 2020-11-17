@@ -46,26 +46,38 @@ class BluePrinter
 
         $reflection = new ReflectionClass($fqcn);
 
-        // Map constructor
-        $constructor = $reflection->getConstructor();
-        if ($constructor !== null) {
-            foreach ($constructor->getParameters() as $parameter) {
-                $bluePrint->addConstructorProperty(
-                    new MethodParameter(
-                        $parameter->getName(),
-                        $parameter->getType() === null ? null : DataType::parse($parameter->getType()),
-                        ! $parameter->isDefaultValueAvailable(),
-                        $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null,
-                    )
-                );
-            }
-        }
-
         // Map properties
         foreach ($reflection->getProperties() as $property) {
             $bluePrint->addProperty(
                 $this->printProperty($property)
             );
+        }
+
+        // Map constructor
+        $constructor = $reflection->getConstructor();
+        if ($constructor !== null) {
+            foreach ($constructor->getParameters() as $parameter) {
+                $dataType = null;
+                if ($parameter->getType()) {
+                    $dataType = DataType::parse((string) $parameter->getType());
+                }
+                if ($dataType === null || $dataType->getType() === 'array') {
+                    $property = $bluePrint->getProperty($parameter->getName());
+
+                    if ($property !== null && ! empty($property->getTypes())) {
+                        $dataType = $bluePrint->getProperty($parameter->getName())->getTypes()[0];
+                    }
+                }
+
+                $bluePrint->addConstructorProperty(
+                    new MethodParameter(
+                        $parameter->getName(),
+                        $dataType,
+                        ! $parameter->isDefaultValueAvailable(),
+                        $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null,
+                    )
+                );
+            }
         }
 
         $this->bluePrintCache[$cacheSlug] = $bluePrint;

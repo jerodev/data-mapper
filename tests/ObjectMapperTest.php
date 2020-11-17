@@ -6,6 +6,7 @@ use Jerodev\DataMapper\BluePrinter;
 use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\ObjectMapper;
+use Jerodev\DataMapper\Tests\TestClasses\ArrayConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
@@ -89,6 +90,14 @@ final class ObjectMapperTest extends TestCase
         $this->assertEquals(7, $result->number);
         $this->assertEquals(3.14, $result->floatingPoint);
         $this->assertTrue($result->checkbox);
+    }
+
+    /** @test */
+    public function it_should_get_constructor_type_from_property_if_possible(): void
+    {
+        $result = $this->mapper->map(ArrayConstructorClass::class, ['integers' => ['5', '18']]);
+
+        $this->assertEquals([5, 18], $result->integers);
     }
 
     /** @test */

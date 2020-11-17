@@ -39,6 +39,11 @@ class ClassBluePrint
         return $this->properties;
     }
 
+    public function getProperty(string $name): ?PropertyBluePrint
+    {
+        return $this->properties[$name] ?? null;
+    }
+
     public function addProperty(PropertyBluePrint $property): void
     {
         $this->properties[$property->getPropertyName()] = $property;

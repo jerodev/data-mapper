@@ -85,7 +85,7 @@ class BluePrinter
         return $bluePrint;
     }
 
-    private function getFullyQualifiedClassName(string $source, ?string $parentClass = null): string
+    private function getFullyQualifiedClassName(string $source, ?ReflectionClass $declaringClass = null): string
     {
         // Does the source start at root?
         if (\substr($source, 0, 1) === '\\') {
@@ -101,25 +101,23 @@ class BluePrinter
             return '\\' . $source;
         }
 
-        if ($parentClass !== null && \class_exists($parentClass)) {
-            $parentReflection = new ReflectionClass($parentClass);
-
+        if ($declaringClass !== null) {
             // Can we find the source in the parent namespace?
-            $withParentNamespace = '\\' . \ltrim($parentReflection->getNamespaceName(), '\\') . '\\' . $source;
+            $withParentNamespace = '\\' . \ltrim($declaringClass->getNamespaceName(), '\\') . '\\' . $source;
             if (\class_exists($withParentNamespace)) {
                 return $withParentNamespace;
             }
 
             // Try finding the source class in parent imports.
-            $imports = $this->getClassImports($parentReflection);
+            $imports = $this->getClassImports($declaringClass);
             if (\array_key_exists($source, $imports) && \class_exists($imports[$source])) {
                 return $imports[$source];
             }
 
             // Try the parent of the parent class.
-            $parentParent = $parentReflection->getParentClass();
+            $parentParent = $declaringClass->getParentClass();
             if ($parentParent instanceof ReflectionClass && $parentParent->isUserDefined()) {
-                return $this->getFullyQualifiedClassName($source, $parentParent->getName());
+                return $this->getFullyQualifiedClassName($source, $parentParent);
             }
         }
 
@@ -199,7 +197,16 @@ class BluePrinter
                         continue;
                     }
 
-                    $bluePrint->addType(DataType::parse($type, isset($dataType) && $dataType->isNullable()));
+                    $dataType = DataType::parse($type, isset($dataType) && $dataType->isNullable());
+
+                    // If datatype is not native, make sure we have the full namespace for the class
+                    if (! $dataType->isNativeType()) {
+                        if (! \class_exists($dataType->getType())) {
+                            $dataType->setType($this->getFullyQualifiedClassName($dataType->getType(), $property->getDeclaringClass()));
+                        }
+                    }
+
+                    $bluePrint->addType($dataType);
                 }
 
                 if (! empty($bluePrint->getTypes())) {

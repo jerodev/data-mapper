@@ -25,6 +25,11 @@ class DataType
         return $this->type;
     }
 
+    public function setType(string $type): void
+    {
+        $this->type = $type;
+    }
+
     public function isArray(): bool
     {
         return $this->isArray;

@@ -7,6 +7,7 @@ use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\ObjectMapper;
 use Jerodev\DataMapper\Tests\TestClasses\ArrayConstructorClass;
+use Jerodev\DataMapper\Tests\TestClasses\CallingClass;
 use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
@@ -109,5 +110,20 @@ final class ObjectMapperTest extends TestCase
             'bar' => 'baa',
             'baz' => 'boo',
         ]);
+    }
+
+    /** @test */
+    public function it_should_user_calling_class_to_find_type_namespace(): void
+    {
+        $result = $this->mapper->map(CallingClass::class, [
+            'recursive' => [
+                [
+                    'value' => 'foo',
+                ],
+            ],
+        ]);
+
+        $this->assertInstanceOf(RecursiveClass::class, $result->recursive[0]);
+        $this->assertEquals('foo', $result->recursive[0]->value);
     }
 }

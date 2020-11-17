@@ -92,9 +92,11 @@ class Mapper
      */
     private function mapNative(DataType $type, $data)
     {
+        if ($type->isGenericArray()) {
+            return (array) $data;
+        }
+
         switch ($type->getType()) {
-            case 'array':
-                return $data;
             case 'bool':
                 return \filter_var($data, FILTER_VALIDATE_BOOLEAN);
             case 'float':

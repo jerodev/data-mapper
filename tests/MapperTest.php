@@ -36,11 +36,14 @@ final class MapperTest extends TestCase
         $this->assertEquals($expected, $this->mapper->map($type, $input));
     }
 
-
     public function nativeTypeDataProvider(): Generator
     {
         yield [['1', '2', '3'], 'array', ['1', '2', '3']];
+        yield [['1'], 'array', '1'];
         yield [[], 'array', []];
+        yield [['1', '2', '3'], 'iterable', ['1', '2', '3']];
+        yield [['1'], 'iterable', '1'];
+        yield [[], 'iterable', []];
 
         yield [true, 'bool', 'true'];
         yield [true, 'bool', 1];

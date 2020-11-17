@@ -61,7 +61,7 @@ class BluePrinter
                 if ($parameter->getType()) {
                     $dataType = DataType::parse((string) $parameter->getType());
                 }
-                if ($dataType === null || $dataType->getType() === 'array') {
+                if ($dataType === null || $dataType->isGenericArray()) {
                     $property = $bluePrint->getProperty($parameter->getName());
 
                     if ($property !== null && ! empty($property->getTypes())) {
@@ -175,11 +175,11 @@ class BluePrinter
             $dataType = DataType::parse($type);
 
             // If the type is not a generic array, roll with it!
-            if ($dataType->getType() !== 'array') {
+            if ($dataType->isGenericArray()) {
+                $genericArray = true;
+            } else {
                 $bluePrint->addType($dataType);
                 return $bluePrint;
-            } else {
-                $genericArray = true;
             }
         }
 

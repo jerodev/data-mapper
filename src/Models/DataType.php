@@ -30,6 +30,14 @@ class DataType
         return $this->isArray;
     }
 
+    public function isGenericArray(): bool
+    {
+        return \in_array($this->getType(), [
+            'array',
+            'iterable',
+        ], true);
+    }
+
     public function isNullable(): bool
     {
         return $this->isNullable;
@@ -42,6 +50,7 @@ class DataType
             'bool',
             'float',
             'int',
+            'iterable',
             'object',
             'string',
         ], true);

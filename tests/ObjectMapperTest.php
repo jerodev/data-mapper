@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper\Tests;
 use Jerodev\DataMapper\BluePrinter;
 use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\MapsFromArray;
 use Jerodev\DataMapper\ObjectMapper;
 use Jerodev\DataMapper\Tests\TestClasses\ArrayConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\CallingClass;
@@ -39,6 +40,40 @@ final class ObjectMapperTest extends TestCase
         $this->assertEquals('foo', $result->foo);
         $this->assertEquals('bar', $result->bar);
         $this->assertEquals('boo', $result->baz);
+    }
+
+    public function it_should_map_from_array(): void
+    {
+        $class = new class implements MapsFromArray {
+            public ?string $foo = null;
+            private string $bar;
+
+            public function getBar(): string
+            {
+                return $this->bar;
+            }
+
+            public function setBar(string $bar): void
+            {
+                $this->bar = $bar;
+            }
+
+            public function mapFromArray(array $data): MapsFromArray
+            {
+                $object = new self();
+                $object->setBar($data['bar']);
+
+                return $object;
+            }
+        };
+
+        $mapped = $this->mapper->map(\get_class($class), [
+            'foo' => 'bar',
+            'bar' => 'baz',
+        ]);
+
+        $this->assertEquals('baz', $mapped->getBar());
+        $this->assertNull($mapped->foo);
     }
 
     /** @test */

@@ -45,38 +45,41 @@ class BluePrinter
         $bluePrint = new ClassBluePrint($fqcn);
 
         $reflection = new ReflectionClass($fqcn);
-
-        // Map properties
-        foreach ($reflection->getProperties() as $property) {
-            $bluePrint->addProperty(
-                $this->printProperty($property)
-            );
-        }
-
-        // Map constructor
-        $constructor = $reflection->getConstructor();
-        if ($constructor !== null) {
-            foreach ($constructor->getParameters() as $parameter) {
-                $dataType = null;
-                if ($parameter->getType()) {
-                    $dataType = DataType::parse((string) $parameter->getType());
-                }
-                if ($dataType === null || $dataType->isGenericArray()) {
-                    $property = $bluePrint->getProperty($parameter->getName());
-
-                    if ($property !== null && ! empty($property->getTypes())) {
-                        $dataType = $bluePrint->getProperty($parameter->getName())->getTypes()[0];
-                    }
-                }
-
-                $bluePrint->addConstructorProperty(
-                    new MethodParameter(
-                        $parameter->getName(),
-                        $dataType,
-                        ! $parameter->isDefaultValueAvailable(),
-                        $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null,
-                    )
+        if ($reflection->implementsInterface(MapsFromArray::class)) {
+            $bluePrint->setMapsFromArray();
+        } else {
+            // Map properties
+            foreach ($reflection->getProperties() as $property) {
+                $bluePrint->addProperty(
+                    $this->printProperty($property)
                 );
+            }
+
+            // Map constructor
+            $constructor = $reflection->getConstructor();
+            if ($constructor !== null) {
+                foreach ($constructor->getParameters() as $parameter) {
+                    $dataType = null;
+                    if ($parameter->getType()) {
+                        $dataType = DataType::parse((string) $parameter->getType());
+                    }
+                    if ($dataType === null || $dataType->isGenericArray()) {
+                        $property = $bluePrint->getProperty($parameter->getName());
+
+                        if ($property !== null && ! empty($property->getTypes())) {
+                            $dataType = $bluePrint->getProperty($parameter->getName())->getTypes()[0];
+                        }
+                    }
+
+                    $bluePrint->addConstructorProperty(
+                        new MethodParameter(
+                            $parameter->getName(),
+                            $dataType,
+                            ! $parameter->isDefaultValueAvailable(),
+                            $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null,
+                        )
+                    );
+                }
             }
         }
 

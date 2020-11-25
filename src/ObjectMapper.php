@@ -25,7 +25,9 @@ class ObjectMapper
 
         // If the class has a constructor, try passing the required parameters
         if (! empty($bluePrint->getConstructorProperties())) {
-            $object = $this->createObjectThroughConstructor($bluePrint, $data);
+            $object = $this->createObjectUsingConstructor($bluePrint, $data);
+        } else if ($bluePrint->mapsFromArray()) {
+            return \call_user_func([$className, 'mapFromArray'], $data);
         } else {
             $object = new $className();
         }
@@ -58,7 +60,7 @@ class ObjectMapper
         return $object;
     }
 
-    private function createObjectThroughConstructor(ClassBluePrint $bluePrint, array $data): object
+    private function createObjectUsingConstructor(ClassBluePrint $bluePrint, array $data): object
     {
         $constructorValues = [];
 

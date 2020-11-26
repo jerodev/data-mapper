@@ -4,5 +4,5 @@ namespace Jerodev\DataMapper;
 
 interface MapsFromArray
 {
-    public function mapFromArray(array $data): self;
+    public static function mapFromArray(array $data): self;
 }

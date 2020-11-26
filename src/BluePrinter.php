@@ -45,8 +45,8 @@ class BluePrinter
         $bluePrint = new ClassBluePrint($fqcn);
 
         $reflection = new ReflectionClass($fqcn);
-        if ($reflection->implementsInterface(MapsFromArray::class)) {
-            $bluePrint->setMapsFromArray();
+        if ($reflection->implementsInterface(MapsItself::class)) {
+            $bluePrint->setMapsItself();
         } else {
             // Map properties
             foreach ($reflection->getProperties() as $property) {

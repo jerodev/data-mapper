@@ -9,7 +9,7 @@ class ClassBluePrint
     /** @var MethodParameter[] */
     private array $constructorProperties;
 
-    private bool $mapsFromArray;
+    private bool $mapsItself;
 
     /** @var PropertyBluePrint[]  */
     private array $properties;
@@ -17,7 +17,7 @@ class ClassBluePrint
     public function __construct(string $className)
     {
         $this->className = $className;
-        $this->mapsFromArray = false;
+        $this->mapsItself = false;
         $this->constructorProperties = [];
         $this->properties = [];
     }
@@ -37,14 +37,14 @@ class ClassBluePrint
         $this->constructorProperties[] = $parameter;
     }
 
-    public function mapsFromArray(): bool
+    public function isMappingItself(): bool
     {
-        return $this->mapsFromArray;
+        return $this->mapsItself;
     }
 
-    public function setMapsFromArray(bool $mapsFromArray = true): void
+    public function setMapsItself(bool $mapsItself = true): void
     {
-        $this->mapsFromArray = $mapsFromArray;
+        $this->mapsItself = $mapsItself;
     }
 
     public function getProperties(): array

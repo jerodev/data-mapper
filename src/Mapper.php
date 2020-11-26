@@ -46,12 +46,7 @@ class Mapper
             return $this->mapNative($type, $data);
         }
 
-        if (\is_array($data)) {
-            return $this->objectMapper->map($type->getType(), $data);
-        }
-
-        // TODO: do we allow this?
-        return $data;
+        return $this->objectMapper->map($type->getType(), $data);
     }
 
     /**

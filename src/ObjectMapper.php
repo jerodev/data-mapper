@@ -18,24 +18,34 @@ class ObjectMapper
         $this->mapper = $mapper;
     }
 
-    public function map(string $className, array $data): object
+    public function map(string $className, $data): object
     {
         $bluePrint = $this->bluePrinter->print($className);
         $className = $bluePrint->getClassName();
 
+        // If the class implements MapsItself, just create the object using the mapObject function
+        if ($bluePrint->isMappingItself()) {
+            return \call_user_func([$className, 'mapObject'], $data);
+        }
+
         // If the class has a constructor, try passing the required parameters
         if (! empty($bluePrint->getConstructorProperties())) {
-            $object = $this->createObjectUsingConstructor($bluePrint, $data);
-        } else if ($bluePrint->isMappingItself()) {
-            return \call_user_func([$className, 'mapObject'], $data);
+            $object = $this->createObjectUsingConstructor(
+                $bluePrint,
+                (array) $data
+            );
         } else {
             $object = new $className();
         }
 
-        return $this->mapObjectProperties($object, $bluePrint, $data);
+        if (\is_array($data)) {
+            $this->mapObjectProperties($object, $bluePrint, $data);
+        }
+
+        return $object;
     }
 
-    private function mapObjectProperties(object $object, ClassBluePrint $bluePrint, array $data): object
+    private function mapObjectProperties(object $object, ClassBluePrint $bluePrint, array $data): void
     {
         foreach ($bluePrint->getProperties() as $property) {
             if (! \array_key_exists($property->getPropertyName(), $data)) {
@@ -56,8 +66,6 @@ class ObjectMapper
                 }
             }
         }
-
-        return $object;
     }
 
     private function createObjectUsingConstructor(ClassBluePrint $bluePrint, array $data): object

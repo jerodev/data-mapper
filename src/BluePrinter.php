@@ -30,22 +30,22 @@ class BluePrinter
      * @return ClassBluePrint
      * @throws ClassNotFoundException
      */
-    public function print($source, ?string $parentClass = null): ClassBluePrint
+    public function print($source): ClassBluePrint
     {
         if (\is_object($source)) {
             $source = \get_class($source);
         }
 
-        $cacheSlug = "{$parentClass}.{$source}";
+        $cacheSlug = "{$source}";
         if (\array_key_exists($cacheSlug, $this->bluePrintCache)) {
             return $this->bluePrintCache[$cacheSlug];
         }
 
-        $fqcn = $this->getFullyQualifiedClassName($source, $parentClass);
+        $fqcn = $this->getFullyQualifiedClassName($source);
         $bluePrint = new ClassBluePrint($fqcn);
 
         $reflection = new ReflectionClass($fqcn);
-        if ($reflection->implementsInterface(MapsItself::class)) {
+        if (\in_array(MapsItself::class, \class_implements($source), true)) {
             $bluePrint->setMapsItself();
         } else {
             // Map properties

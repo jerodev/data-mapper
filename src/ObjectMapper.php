@@ -30,10 +30,7 @@ class ObjectMapper
 
         // If the class has a constructor, try passing the required parameters
         if (! empty($bluePrint->getConstructorProperties())) {
-            $object = $this->createObjectUsingConstructor(
-                $bluePrint,
-                (array) $data
-            );
+            $object = $this->createObjectUsingConstructor($bluePrint, (array) $data);
         } else {
             $object = new $className();
         }

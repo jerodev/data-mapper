@@ -41,5 +41,8 @@ jobs:
       - name: Configure matchers
         uses: mheap/phpunit-matcher-action@master
 
+      - name: Code Styles
+        run: vendor/bin/phpcs -p
+
       - name: Execute tests
         run: vendor/bin/phpunit

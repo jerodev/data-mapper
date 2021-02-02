@@ -29,7 +29,7 @@
         "php": "^7.4|^8.0"
     },
     "require-dev": {
-        "jerodev/code-styles": "9999999-dev",
+        "jerodev/code-styles": "dev-master",
         "phpstan/phpstan": "^0.12.53",
         "phpunit/phpunit": "^9.4"
     },

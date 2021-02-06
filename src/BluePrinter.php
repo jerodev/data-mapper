@@ -174,7 +174,6 @@ class BluePrinter
 
         // Test for PHP7.4 typed properties.
         if ($type = $property->getType()) {
-
             // PHP8.0 union types
             if ($type instanceof ReflectionUnionType) {
                 $allowNull = false;

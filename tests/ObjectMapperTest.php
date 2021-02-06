@@ -12,6 +12,7 @@ use Jerodev\DataMapper\Tests\TestClasses\CallingClass;
 use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
+use Jerodev\DataMapper\Tests\TestClasses\UnionTypesClass;
 use PHPUnit\Framework\TestCase;
 
 final class ObjectMapperTest extends TestCase
@@ -126,6 +127,23 @@ final class ObjectMapperTest extends TestCase
         $this->assertEquals(7, $result->number);
         $this->assertEquals(3.14, $result->floatingPoint);
         $this->assertTrue($result->checkbox);
+    }
+
+    /**
+     * @test
+     * @requires PHP 8.0
+     */
+    public function it_should_map_union_types(): void
+    {
+        $data = [
+            'value' => '5',
+            'stringValue' => 'foo',
+        ];
+
+        $object = $this->mapper->map(UnionTypesClass::class, $data);
+
+        $this->assertEquals(5, $object->value);
+        $this->assertEquals('foo', $object->stringValue);
     }
 
     /** @test */

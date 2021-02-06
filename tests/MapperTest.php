@@ -3,7 +3,6 @@
 namespace Jerodev\DataMapper\Tests;
 
 use Generator;
-use Jerodev\DataMapper\BluePrinter;
 use Jerodev\DataMapper\Mapper;
 use PHPUnit\Framework\TestCase;
 

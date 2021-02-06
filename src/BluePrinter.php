@@ -9,6 +9,7 @@ use Jerodev\DataMapper\Models\MethodParameter;
 use Jerodev\DataMapper\Models\PropertyBluePrint;
 use ReflectionClass;
 use ReflectionProperty;
+use ReflectionUnionType;
 
 class BluePrinter
 {
@@ -173,6 +174,25 @@ class BluePrinter
 
         // Test for PHP7.4 typed properties.
         if ($type = $property->getType()) {
+
+            // PHP8.0 union types
+            if ($type instanceof ReflectionUnionType) {
+                $allowNull = false;
+                foreach ($type->getTypes() as $reflectionType) {
+                    $typeString = $reflectionType->getName();
+
+                    if ($typeString === 'null') {
+                        $allowNull = true;
+                        continue;
+                    }
+
+                    $dataType = DataType::parse($reflectionType->getName(), $allowNull);
+                    $bluePrint->addType($dataType);
+                }
+
+                return $bluePrint;
+            }
+
             $dataType = DataType::parse($type);
 
             // If the type is not a generic array, roll with it!

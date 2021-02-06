@@ -63,6 +63,8 @@ final class MapperTest extends TestCase
         yield [['1', '2', '3'], 'iterable', ['1', '2', '3']];
         yield [['1'], 'iterable', '1'];
         yield [[], 'iterable', []];
+        yield [[['1']], 'int[][]', [[1]]];
+        yield [['first' => ['1'], 'second' => ['2', '3']], 'int[][]', ['first' => [1], 'second' => [2, 3]]];
 
         yield [true, 'bool', 'true'];
         yield [true, 'bool', 1];

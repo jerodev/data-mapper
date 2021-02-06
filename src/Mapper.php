@@ -63,20 +63,16 @@ class Mapper
     private function mapArray(DataType $type, array $data): array
     {
         $singleType = $type->clone(false);
+        $isNestedArray = \substr($singleType->getType(), -2) === '[]';
 
-        // If the array is sequential, use array_map.
-        $keys = \array_keys($data);
-        if (\array_keys($keys) === $keys) {
-            return \array_map(
-                fn($value) => $this->map($singleType, $value),
-                $data
-            );
-        }
-
-        // If we have an associative array, retain the keys.
         $array = [];
         foreach ($data as $key => $value) {
-            $array[$key] = $this->map($singleType, $value);
+            // If we have a nested array, keep calling this function.
+            if (\is_array($value) && $isNestedArray) {
+                $array[$key] = self::mapArray(DataType::parse($singleType->getType()), $value);
+            } else {
+                $array[$key] = $this->map($singleType, $value);
+            }
         }
 
         return $array;

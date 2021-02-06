@@ -150,7 +150,7 @@ class BluePrinter
         while ($line = \fgets($resource)) {
             // Lines starting with 'use ' indicate an import statement.
             if (\substr($line, 0, 4) === 'use ') {
-                $parts = \explode(' ', \trim($line));
+                $parts = \explode(' ', \trim($line, "; \n"));
 
                 // Skip imports for functions or constants.
                 if ($parts[1] === 'function' || $parts[1] === 'const') {

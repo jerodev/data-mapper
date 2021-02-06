@@ -3,7 +3,9 @@
 namespace Jerodev\DataMapper\Tests;
 
 use Generator;
+use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\Models\MapperOptions;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
@@ -33,6 +35,24 @@ final class MapperTest extends TestCase
     public function it_should_map_array_types($expected, string $type, $input): void
     {
         $this->assertEquals($expected, $this->mapper->map($type, $input));
+    }
+
+    /** @test */
+    public function it_should_throw_exception_when_strict_mapping_null_values(): void
+    {
+        $this->expectException(UnexpectedNullValueException::class);
+
+        $this->mapper->map('int', null);
+    }
+
+    /** @test */
+    public function it_should_allow_non_strict_null_mapping_through_options(): void
+    {
+        $this->mapper = new Mapper(
+            new MapperOptions(false)
+        );
+
+        $this->assertNull($this->mapper->map('int', null));
     }
 
     public function nativeTypeDataProvider(): Generator

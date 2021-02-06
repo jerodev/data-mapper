@@ -4,13 +4,17 @@ namespace Jerodev\DataMapper;
 
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Models\DataType;
+use Jerodev\DataMapper\Models\MapperOptions;
 
 class Mapper
 {
+    private MapperOptions $mapperOptions;
     private ObjectMapper $objectMapper;
 
-    public function __construct()
-    {
+    public function __construct(
+        ?MapperOptions $mapperOptions = null
+    ) {
+        $this->mapperOptions = $mapperOptions ?? new MapperOptions();
         $this->objectMapper = new ObjectMapper(
             $this,
             new BluePrinter()
@@ -31,7 +35,7 @@ class Mapper
         }
 
         if ($data === null) {
-            if ($type->isNullable()) {
+            if ($type->isNullable() || (! $type->isNullable() && $this->mapperOptions->strictNullMapping === false)) {
                 return null;
             } else {
                 throw new UnexpectedNullValueException();

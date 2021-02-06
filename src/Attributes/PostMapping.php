@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile
 
 namespace Jerodev\DataMapper\Attributes;
 

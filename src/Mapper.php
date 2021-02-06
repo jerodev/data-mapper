@@ -30,6 +30,10 @@ class Mapper
      */
     public function map($type, $data)
     {
+        if ($type === 'null') {
+            return null;
+        }
+
         if (\is_string($type)) {
             $type = DataType::parse($type);
         }

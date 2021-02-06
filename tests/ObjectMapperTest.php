@@ -10,6 +10,7 @@ use Jerodev\DataMapper\ObjectMapper;
 use Jerodev\DataMapper\Tests\TestClasses\ArrayConstructorClass;
 use Jerodev\DataMapper\Tests\TestClasses\CallingClass;
 use Jerodev\DataMapper\Tests\TestClasses\ConstructorClass;
+use Jerodev\DataMapper\Tests\TestClasses\PostMappingClass;
 use Jerodev\DataMapper\Tests\TestClasses\RecursiveClass;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
 use Jerodev\DataMapper\Tests\TestClasses\UnionTypesClass;
@@ -29,6 +30,21 @@ final class ObjectMapperTest extends TestCase
         );
     }
 
+    /**
+     * @test
+     * @requires PHP 8.0
+     */
+    public function it_should_call_post_mapping_function_after_mapping(): void
+    {
+        $data = [
+            'value' => 2,
+        ];
+
+        $object = $this->mapper->map(PostMappingClass::class, $data);
+
+        $this->assertEquals(4, $object->value);
+    }
+
     /** @test */
     public function it_should_map_constructor_parameters(): void
     {
@@ -43,6 +59,7 @@ final class ObjectMapperTest extends TestCase
         $this->assertEquals('boo', $result->baz);
     }
 
+    /** @test */
     public function it_should_map_from_array(): void
     {
         $class = new class implements MapsItself {

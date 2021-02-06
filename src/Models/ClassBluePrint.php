@@ -4,14 +4,34 @@ namespace Jerodev\DataMapper\Models;
 
 class ClassBluePrint
 {
+    /**
+     * The full classname for this object
+     */
     private string $className;
 
-    /** @var MethodParameter[] */
+    /**
+     * Properties required for the constructor call.
+     *
+     * @var MethodParameter[]
+     */
     private array $constructorProperties;
 
+    /**
+     * Indicating if the class has a static method `mapObject` to use for mapping.
+     */
     private bool $mapsItself;
 
-    /** @var PropertyBluePrint[]  */
+    /**
+     * A optional function to be called after mapping the object.
+     * Can be defined using the `PostMapping` attribute on the class.
+     */
+    private ?string $postMapping;
+
+    /**
+     * Information about all public properties on the class.
+     *
+     * @var PropertyBluePrint[]
+     */
     private array $properties;
 
     public function __construct(string $className)
@@ -19,6 +39,7 @@ class ClassBluePrint
         $this->className = $className;
         $this->mapsItself = false;
         $this->constructorProperties = [];
+        $this->postMapping = null;
         $this->properties = [];
     }
 
@@ -50,6 +71,16 @@ class ClassBluePrint
     public function getProperties(): array
     {
         return $this->properties;
+    }
+
+    public function getPostMapping(): ?string
+    {
+        return $this->postMapping;
+    }
+
+    public function setPostMapping(?string $postMapping): void
+    {
+        $this->postMapping = $postMapping;
     }
 
     public function getProperty(string $name): ?PropertyBluePrint

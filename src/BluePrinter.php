@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper;
 
+use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Exceptions\ClassNotFoundException;
 use Jerodev\DataMapper\Models\ClassBluePrint;
 use Jerodev\DataMapper\Models\DataType;
@@ -81,6 +82,15 @@ class BluePrinter
                         )
                     );
                 }
+            }
+        }
+
+        // Test for attributes, PHP8.0 only
+        if (\method_exists($reflection, 'getAttributes')) {
+            $postMappingAttributes = $reflection->getAttributes(PostMapping::class);
+            if (! empty($postMappingAttributes)) {
+                $arguments = $postMappingAttributes[0]->getArguments();
+                $bluePrint->setPostMapping(\reset($arguments));
             }
         }
 

@@ -25,7 +25,7 @@ class ObjectMapper
 
         // If the class implements MapsItself, just create the object using the mapObject function
         if ($bluePrint->isMappingItself()) {
-            return \call_user_func([$className, 'mapObject'], $data);
+            return \call_user_func([$className, 'mapObject'], $data, $this->mapper);
         }
 
         // If the class has a constructor, try passing the required parameters

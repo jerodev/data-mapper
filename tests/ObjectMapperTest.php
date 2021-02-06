@@ -76,7 +76,7 @@ final class ObjectMapperTest extends TestCase
                 $this->bar = $bar;
             }
 
-            public static function mapObject($data): self
+            public static function mapObject($data, Mapper $mapper): MapsItself
             {
                 $object = new self();
                 $object->setBar($data['bar']);

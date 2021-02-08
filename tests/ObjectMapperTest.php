@@ -138,12 +138,20 @@ final class ObjectMapperTest extends TestCase
             'number' => '7',
             'floatingPoint' => '3.14',
             'checkbox' => 1,
+            'numbers' => [
+                'foo' => [1, '2'],
+                'bar' => [3],
+            ]
         ]);
 
         $this->assertEquals('bar', $result->foo);
         $this->assertEquals(7, $result->number);
         $this->assertEquals(3.14, $result->floatingPoint);
         $this->assertTrue($result->checkbox);
+        $this->assertEquals($result->numbers,  [
+            'foo' => [1, 2],
+            'bar' => [3],
+        ]);
     }
 
     /**
@@ -183,7 +191,7 @@ final class ObjectMapperTest extends TestCase
     }
 
     /** @test */
-    public function it_should_user_calling_class_to_find_type_namespace(): void
+    public function it_should_use_calling_class_to_find_type_namespace(): void
     {
         $result = $this->mapper->map(CallingClass::class, [
             'recursive' => [

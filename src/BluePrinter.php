@@ -215,7 +215,7 @@ class BluePrinter
 
         // Get the @var annotation from the docblock if any.
         if ($docBlock = $property->getDocComment()) {
-            if (\preg_match('/@var\s+((\|?\??[\w\d]+(?:\[])?)+)/', $docBlock, $matches) === 1 && \count($matches) > 1) {
+            if (\preg_match('/@var\s+((\|?\??[\w\d]+(?:\[])*)+)/', $docBlock, $matches) === 1 && \count($matches) > 1) {
                 $types = \explode('|', $matches[1]);
                 foreach ($types as $type) {
                     $type = \trim($type);

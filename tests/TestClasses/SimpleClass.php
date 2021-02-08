@@ -8,4 +8,7 @@ class SimpleClass
     public int $number;
     public float $floatingPoint;
     public bool $checkbox;
+
+    /** @var int[][] */
+    public array $numbers;
 }

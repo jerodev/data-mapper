@@ -66,14 +66,13 @@ class Mapper
      */
     private function mapArray(DataType $type, array $data): array
     {
-        $singleType = $type->clone(false);
-        $isNestedArray = \substr($singleType->getType(), -2) === '[]';
+        $singleType = $type->getChildArrayType();
 
         $array = [];
         foreach ($data as $key => $value) {
             // If we have a nested array, keep calling this function.
-            if (\is_array($value) && $isNestedArray) {
-                $array[$key] = self::mapArray(DataType::parse($singleType->getType()), $value);
+            if (\is_array($value) && $singleType->isArray()) {
+                $array[$key] = self::mapArray($singleType, $value);
             } else {
                 $array[$key] = $this->map($singleType, $value);
             }

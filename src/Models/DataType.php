@@ -5,18 +5,18 @@ namespace Jerodev\DataMapper\Models;
 class DataType
 {
     private string $type;
-    private bool $isArray;
+    private int $arrayLevel;
     private bool $isNullable;
 
     /**
      * @param string $type
-     * @param bool $isArray
+     * @param int $arrayLevel
      * @param bool $isNullable
      */
-    public function __construct(string $type, bool $isArray = false, bool $isNullable = false)
+    public function __construct(string $type, int $arrayLevel = 0, bool $isNullable = false)
     {
         $this->type = $type;
-        $this->isArray = $isArray;
+        $this->arrayLevel = $arrayLevel;
         $this->isNullable = $isNullable;
     }
 
@@ -32,7 +32,7 @@ class DataType
 
     public function isArray(): bool
     {
-        return $this->isArray;
+        return $this->arrayLevel > 0;
     }
 
     public function isGenericArray(): bool
@@ -50,7 +50,7 @@ class DataType
 
     public function isNativeType(): bool
     {
-        return \in_array($this->type, [
+        return \in_array($this->getType(), [
             'array',
             'bool',
             'float',
@@ -61,21 +61,28 @@ class DataType
         ], true);
     }
 
-    public function clone(?bool $isArray = null, ?bool $isNullable = null): self
+    public function clone(?int $arrayLevel = null, ?bool $isNullable = null): self
     {
         return new DataType(
             $this->type,
-            $isArray ?? $this->isArray(),
+            $arrayLevel ?? $this->arrayLevel,
             $isNullable ?? $this->isNullable(),
         );
     }
 
+    public function getChildArrayType(): DataType
+    {
+        return $this->clone($this->arrayLevel - 1);
+    }
+
     public static function parse(string $type, bool $forceNullable = false): self
     {
-        $isArray = false;
+        $arrayLevel = 0;
         if (\substr($type, -2) === '[]') {
-            $isArray = true;
-            $type = \substr($type, 0, \strlen($type) - 2);
+            if (\preg_match('/^(.*?)((\[])+)$/', $type, $matches) === 1) {
+                $type = $matches[1];
+                $arrayLevel = \strlen($matches[2]) / 2;
+            }
         }
 
         if (\substr($type, '0', 1) === '?') {
@@ -83,6 +90,6 @@ class DataType
             $type = \substr($type, 1);
         }
 
-        return new self($type, $isArray, $forceNullable);
+        return new self($type, $arrayLevel, $forceNullable);
     }
 }

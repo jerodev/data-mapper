@@ -17,6 +17,18 @@ final class DataTypeTest extends TestCase
         $this->assertTrue(DataType::parse('?int', false)->isNullable());
     }
 
+    /** @test */
+    public function it_should_parse_square_brackets_to_array_level(): void
+    {
+        $dataType = DataType::parse('int[][][]');
+
+        $this->assertEquals('int', $dataType->getType());
+        $this->assertTrue($dataType->isArray());
+        $this->assertTrue($dataType->getArrayChildType()->isArray());
+        $this->assertTrue($dataType->getArrayChildType()->getArrayChildType()->isArray());
+        $this->assertFalse($dataType->getArrayChildType()->getArrayChildType()->getArrayChildType()->isArray());
+    }
+
     /**
      * @test
      * @dataProvider parseTestProvider

@@ -61,18 +61,13 @@ class DataType
         ], true);
     }
 
-    public function clone(?int $arrayLevel = null, ?bool $isNullable = null): self
+    public function getArrayChildType(): DataType
     {
         return new DataType(
-            $this->type,
-            $arrayLevel ?? $this->arrayLevel,
-            $isNullable ?? $this->isNullable(),
+            $this->getType(),
+            $this->arrayLevel - 1,
+            $this->isNullable(),
         );
-    }
-
-    public function getChildArrayType(): DataType
-    {
-        return $this->clone($this->arrayLevel - 1);
     }
 
     public static function parse(string $type, bool $forceNullable = false): self

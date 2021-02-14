@@ -66,7 +66,7 @@ class Mapper
      */
     private function mapArray(DataType $type, array $data): array
     {
-        $singleType = $type->getChildArrayType();
+        $singleType = $type->getArrayChildType();
 
         $array = [];
         foreach ($data as $key => $value) {

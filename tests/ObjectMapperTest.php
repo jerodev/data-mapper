@@ -104,10 +104,12 @@ final class ObjectMapperTest extends TestCase
         $result = $this->mapper->map(\get_class($class), [
             'extended' => 112,
             'foo' => 'bar',
+            'numberOrString' => '7',
         ]);
 
         $this->assertEquals('112', $result->extended);
         $this->assertEquals('bar', $result->foo);
+        $this->assertEquals(7, $result->numberOrString);
     }
 
     /** @test */

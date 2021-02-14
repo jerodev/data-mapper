@@ -9,6 +9,9 @@ class SimpleClass
     public float $floatingPoint;
     public bool $checkbox;
 
+    /** @var int|string */
+    public $numberOrString;
+
     /** @var int[][] */
     public array $numbers;
 }

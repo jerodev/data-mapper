@@ -38,6 +38,18 @@ final class MapperTest extends TestCase
     }
 
     /** @test */
+    public function it_should_map_nullable_object_as_null(): void
+    {
+        $class = new class {
+            public string $foo;
+        };
+
+        $mapped = $this->mapper->map('?' . \get_class($class), null);
+
+        $this->assertNull($mapped);
+    }
+
+    /** @test */
     public function it_should_throw_exception_when_strict_mapping_null_values(): void
     {
         $this->expectException(UnexpectedNullValueException::class);

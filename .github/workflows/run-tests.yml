@@ -5,17 +5,15 @@ on:
   - pull_request
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
+  run-test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
     strategy:
       matrix:
         php:
           - 7.4
           - 8.0
-        os:
-          - ubuntu-latest
-
-    name: PHP ${{ matrix.php }}
 
     steps:
       - name: Checkout code

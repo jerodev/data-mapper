@@ -34,7 +34,7 @@ class PhpDocPropertyResolver implements PropertyTypeResolver
 
     private function getVarPhpDocString(string $docBlock): ?array
     {
-        if (\preg_match('/@var\s+([^\n]+)/', $docBlock, $matches) === 1 && \count($matches) > 1) {
+        if (\preg_match('/@var\s+([^\n*]+)/', $docBlock, $matches) === 1 && \count($matches) > 1) {
             return \preg_split('/\s*\|\s*/', $matches[1]);
         }
 

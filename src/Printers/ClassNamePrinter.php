@@ -29,6 +29,10 @@ class ClassNamePrinter
 
     public function resolveClassName(string $className, ?ReflectionClass $declaringClass = null): ?string
     {
+        if (\class_exists($className)) {
+            return $className;
+        }
+
         foreach ($this->classNameResolvers as $classNameResolver) {
             $resolvedClassName = $classNameResolver->getFullClassName($className, $declaringClass);
             if ($resolvedClassName !== null) {
@@ -36,9 +40,12 @@ class ClassNamePrinter
             }
         }
 
-        $parentParent = $declaringClass->getParentClass();
-        if ($parentParent instanceof ReflectionClass && $parentParent->isUserDefined()) {
-            return $this->resolveClassName($className, $parentParent);
+        // Recursively do the same for user defined parent classes.
+        if ($declaringClass !== null) {
+            $parentParent = $declaringClass->getParentClass();
+            if ($parentParent instanceof ReflectionClass && $parentParent->isUserDefined()) {
+                return $this->resolveClassName($className, $parentParent);
+            }
         }
 
         return null;

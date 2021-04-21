@@ -1,9 +1,10 @@
 <?php
 
-namespace Jerodev\DataMapper;
+namespace Jerodev\DataMapper\Printers;
 
 use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Exceptions\ClassNotFoundException;
+use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Models\ClassBluePrint;
 use Jerodev\DataMapper\Models\DataType;
 use Jerodev\DataMapper\Models\MethodParameter;
@@ -14,14 +15,18 @@ use ReflectionUnionType;
 
 class BluePrinter
 {
+    private PropertyPrinter $propertyPrinter;
+
     /** @var ClassBluePrint[] */
     private array $bluePrintCache;
 
     /** @var string[][] */
     private array $importCache;
 
-    public function __construct()
+    public function __construct(?PropertyPrinter $propertyPrinter = null)
     {
+        $this->propertyPrinter = $propertyPrinter ?? new PropertyPrinter();
+
         $this->bluePrintCache = [];
         $this->importCache = [];
     }
@@ -52,9 +57,7 @@ class BluePrinter
         } else {
             // Map properties
             foreach ($reflection->getProperties() as $property) {
-                $bluePrint->addProperty(
-                    $this->printProperty($property)
-                );
+                $bluePrint->addProperty($this->propertyPrinter->print($property));
             }
 
             // Map constructor

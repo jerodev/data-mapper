@@ -2,7 +2,7 @@
 
 namespace Jerodev\DataMapper\Tests;
 
-use Jerodev\DataMapper\BluePrinter;
+use Jerodev\DataMapper\Printers\BluePrinter;
 use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapsItself;

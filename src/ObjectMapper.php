@@ -4,6 +4,7 @@ namespace Jerodev\DataMapper;
 
 use Jerodev\DataMapper\Exceptions\ConstructorParameterMissingException;
 use Jerodev\DataMapper\Models\ClassBluePrint;
+use Jerodev\DataMapper\Printers\BluePrinter;
 use ReflectionProperty;
 use Throwable;
 

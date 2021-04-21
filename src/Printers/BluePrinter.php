@@ -8,10 +8,7 @@ use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Models\ClassBluePrint;
 use Jerodev\DataMapper\Models\DataType;
 use Jerodev\DataMapper\Models\MethodParameter;
-use Jerodev\DataMapper\Models\PropertyBluePrint;
 use ReflectionClass;
-use ReflectionProperty;
-use ReflectionUnionType;
 
 class BluePrinter
 {
@@ -178,82 +175,5 @@ class BluePrinter
         $this->importCache[$class->getName()] = $imports;
 
         return $imports;
-    }
-
-    private function printProperty(ReflectionProperty $property): PropertyBluePrint
-    {
-        $bluePrint = new PropertyBluePrint($property->getName());
-        $genericArray = false;
-
-        // Test for PHP7.4 typed properties.
-        if ($type = $property->getType()) {
-            // PHP8.0 union types
-            if ($type instanceof ReflectionUnionType) {
-                $allowNull = false;
-                foreach ($type->getTypes() as $reflectionType) {
-                    $typeString = $reflectionType->getName();
-
-                    if ($typeString === 'null') {
-                        $allowNull = true;
-                        continue;
-                    }
-
-                    $dataType = DataType::parse($reflectionType->getName(), $allowNull);
-                    $bluePrint->addType($dataType);
-                }
-
-                return $bluePrint;
-            }
-
-            $dataType = DataType::parse($type);
-
-            // If the type is not a generic array, roll with it!
-            if ($dataType->isGenericArray()) {
-                $genericArray = true;
-            } else {
-                $bluePrint->addType($dataType);
-                return $bluePrint;
-            }
-        }
-
-        // Get the @var annotation from the docblock if any.
-        if ($docBlock = $property->getDocComment()) {
-            if (\preg_match('/@var\s+(((\s*\|\s*)?\??[\w\d]+(?:\[])*)+)/', $docBlock, $matches) === 1 && \count($matches) > 1) {
-                $types = \preg_split('/\s*\|\s*/', $matches[1]);
-                foreach ($types as $type) {
-                    $type = \trim($type);
-
-                    if ($type === 'array') {
-                        $genericArray = true;
-                        continue;
-                    }
-
-                    if ($type === 'null') {
-                        continue;
-                    }
-
-                    $dataType = DataType::parse($type, isset($dataType) && $dataType->isNullable());
-
-                    // If datatype is not native, make sure we have the full namespace for the class
-                    if (! $dataType->isNativeType()) {
-                        if (! \class_exists($dataType->getType())) {
-                            $dataType->setType($this->getFullyQualifiedClassName($dataType->getType(), $property->getDeclaringClass()));
-                        }
-                    }
-
-                    $bluePrint->addType($dataType);
-                }
-
-                if (! empty($bluePrint->getTypes())) {
-                    return $bluePrint;
-                }
-            }
-        }
-
-        if ($genericArray) {
-            $bluePrint->addType(new DataType('array'));
-        }
-
-        return $bluePrint;
     }
 }

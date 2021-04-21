@@ -9,6 +9,7 @@ use Jerodev\DataMapper\Models\ClassBluePrint;
 use Jerodev\DataMapper\Models\DataType;
 use Jerodev\DataMapper\Models\MethodParameter;
 use ReflectionClass;
+use ReflectionException;
 
 class BluePrinter
 {
@@ -30,9 +31,8 @@ class BluePrinter
 
     /**
      * @param object|string $source
-     * @param string|null $parentClass
      * @return ClassBluePrint
-     * @throws ClassNotFoundException
+     * @throws ClassNotFoundException|ReflectionException
      */
     public function print($source): ClassBluePrint
     {

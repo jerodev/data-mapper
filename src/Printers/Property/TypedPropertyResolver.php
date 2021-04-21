@@ -26,7 +26,10 @@ class TypedPropertyResolver implements PropertyTypeResolver
 
         if ($reflectionType instanceof ReflectionNamedType) {
             return [
-                DataType::parse($reflectionType->getName())
+                DataType::parse(
+                    $reflectionType->getName(),
+                    $reflectionType->allowsNull()
+                ),
             ];
         }
 

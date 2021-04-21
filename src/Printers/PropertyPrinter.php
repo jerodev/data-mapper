@@ -7,13 +7,20 @@ use Jerodev\DataMapper\Models\PropertyBluePrint;
 use Jerodev\DataMapper\Printers\Property\PropertyTypeResolver;
 use ReflectionProperty;
 
+/**
+ * This class takes a ReflectionProperty and tries to return all possible types this property supports.
+ */
 class PropertyPrinter
 {
+    private ClassNamePrinter $classNamePrinter;
+
     /** @var PropertyTypeResolver[] */
     private array $propertyTypeResolvers;
 
-    public function __construct(?array $propertyResolvers = null)
+    public function __construct(ClassNamePrinter $classNamePrinter, ?array $propertyResolvers = null)
     {
+        $this->classNamePrinter = $classNamePrinter;
+
         if ($propertyResolvers !== null) {
             $this->propertyTypeResolvers = $propertyResolvers;
             return;
@@ -34,7 +41,28 @@ class PropertyPrinter
         return $bluePrint;
     }
 
-    private function setPropertyTypes(ReflectionProperty $property, PropertyBluePrint $bluePrint): void
+    private function setPropertyTypes(ReflectionProperty $property, PropertyBluePrint $bluePrint)
+    {
+        $types = $this->getPropertyTypes($property);
+
+        foreach ($types as $type) {
+            if ($type->isNativeType()) {
+                continue;
+            }
+
+            $type->setType(
+                $this->classNamePrinter->resolveClassName($type->getType(), $property->getDeclaringClass())
+            );
+        }
+
+        $bluePrint->setTypes($types);
+    }
+
+    /**
+     * @param ReflectionProperty $property
+     * @return DataType[]
+     */
+    private function getPropertyTypes(ReflectionProperty $property): array
     {
         $genericArray = false;
 
@@ -49,12 +77,11 @@ class PropertyPrinter
                 continue;
             }
 
-            $bluePrint->setTypes($types);
-            break;
+            return $types;
         }
 
         if ($genericArray) {
-            $bluePrint->setTypes([new DataType('array')]);
+            return [new DataType('array')];
         }
     }
 }

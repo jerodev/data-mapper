@@ -12,7 +12,7 @@ class ParentNamespaceResolver implements ClassNameResolver
             return null;
         }
 
-        $rootClassName = '\\' . \ltrim($classReflection->getNamespaceName(), '\\') . '\\' . $className;
+        $rootClassName = \ltrim($classReflection->getNamespaceName(), '\\') . '\\' . $className;
         if (\class_exists($rootClassName)) {
             return $rootClassName;
         }

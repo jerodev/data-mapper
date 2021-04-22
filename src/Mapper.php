@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Models\DataType;
 use Jerodev\DataMapper\Models\MapperOptions;
+use Jerodev\DataMapper\Printers\BluePrinter;
 
 class Mapper
 {

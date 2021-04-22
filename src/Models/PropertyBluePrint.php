@@ -28,6 +28,12 @@ class PropertyBluePrint
         $this->types[] = $type;
     }
 
+    /** @param DataType[] $types */
+    public function setTypes(array $types): void
+    {
+        $this->types = $types;
+    }
+
     /** @return DataType[] */
     public function getTypes(): array
     {

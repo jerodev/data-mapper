@@ -72,6 +72,8 @@ class DataType
 
     public static function parse(string $type, bool $forceNullable = false): self
     {
+        $type = \trim($type);
+
         $arrayLevel = 0;
         if (\substr($type, -2) === '[]') {
             if (\preg_match('/^(.*?)((\[])+)$/', $type, $matches) === 1) {

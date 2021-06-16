@@ -41,7 +41,7 @@ class ObjectMapper
         }
 
         if ($bluePrint->getPostMapping() !== null) {
-            $object->{$bluePrint->getPostMapping()}();
+            $object->{$bluePrint->getPostMapping()}($data);
         }
 
         return $object;

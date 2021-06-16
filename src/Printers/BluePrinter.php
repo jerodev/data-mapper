@@ -87,17 +87,31 @@ class BluePrinter
             }
         }
 
-        // Test for attributes, PHP8.0 only
-        if (\method_exists($reflection, 'getAttributes')) {
-            $postMappingAttributes = $reflection->getAttributes(PostMapping::class);
-            if (! empty($postMappingAttributes)) {
-                $arguments = $postMappingAttributes[0]->getArguments();
-                $bluePrint->setPostMapping(\reset($arguments));
-            }
-        }
+        $this->findPostMappingCallbacks($reflection, $bluePrint);
 
         $this->bluePrintCache[$cacheSlug] = $bluePrint;
 
         return $bluePrint;
+    }
+
+    private function findPostMappingCallbacks(ReflectionClass $reflection, ClassBluePrint $bluePrint): void
+    {
+        if (PHP_MAJOR_VERSION < 8 || ! $reflection->isUserDefined()) {
+            return;
+        }
+
+        if (\method_exists($reflection, 'getAttributes')) {
+            $postMappingAttributes = $reflection->getAttributes(PostMapping::class);
+
+            if (! empty($postMappingAttributes)) {
+                $arguments = $postMappingAttributes[0]->getArguments();
+                $bluePrint->setPostMapping(\reset($arguments));
+                return;
+            }
+
+            if ($reflection->getParentClass() && $reflection->getParentClass()->isUserDefined()) {
+                $this->findPostMappingCallbacks($reflection->getParentClass(), $bluePrint);
+            }
+        }
     }
 }

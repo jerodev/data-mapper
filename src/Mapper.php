@@ -55,6 +55,10 @@ class Mapper
             return $this->mapNative($type, $data);
         }
 
+        if (empty($data) && $type->isNullable()) {
+            return null;
+        }
+
         return $this->objectMapper->map($type->getType(), $data);
     }
 

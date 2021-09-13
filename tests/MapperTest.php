@@ -6,6 +6,7 @@ use Generator;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Models\MapperOptions;
+use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
@@ -100,5 +101,14 @@ final class MapperTest extends TestCase
         yield [[1, 2, 3], 'float[]', ['1', 2, '3']];
         yield [[1, 2, 3], 'int[]', ['1', 2, '3']];
         yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
+        yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
+        yield [['a' => 'b', 'b' => 'c', 4 => '3'], 'array<string>', ['a' => 'b', 'b' => 'c', 4 => 3]];
+
+        $object = new SimpleClass();
+        $object->foo = 'bar';
+        $object2 = new SimpleClass();
+        $object2->foo = 'baz';
+        yield [['bar' => $object, 'baz' => $object2], 'array<string, ' . SimpleClass::class . '>', ['bar' => ['foo' => 'bar'], 'baz' => ['foo' => 'baz']]];
+        yield [[$object, $object2], 'array<' . SimpleClass::class . '>', [['foo' => 'bar'], ['foo' => 'baz']]];
     }
 }

@@ -9,7 +9,6 @@ This package will map any raw data into a strong typed PHP object using a set of
   - [Public properties](#public-properties)
   - [Property setters](#property-setters)
 - [Custom mapping](#custom-mapping)
-- [Syntax](#syntax)
 
 ## Basic mapping
 Let's start with the basics. The mapper will map data directly to public properties on objects. If these properties have
@@ -60,15 +59,3 @@ Sometimes, classes have a constructor that cannot be mapped automatically. For t
 static function: `mapObject`.
 When the mapper comes across a class that implements this interface, instead of using the constructor, the mapper will 
 call the `MapsItself` with the provided data and is expected to return an instance of the current class.
-
-## Syntax
-PHPDoc currently has a few standards when it comes to defining property types. The plan is to support all official 
-methods, but currently there are a few limitations:
-
-### Arrays
-For typed array types, only square brackets are currently supported:
-
-```php
-/** @var string[] */
-private array $foo;
-```

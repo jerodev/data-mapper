@@ -5,19 +5,23 @@ namespace Jerodev\DataMapper\Models;
 class DataType
 {
     private string $type;
-    private int $arrayLevel;
     private bool $isNullable;
+
+    private int $arrayLevel;
+    private ?DataType $arrayKeyType;
 
     /**
      * @param string $type
      * @param int $arrayLevel
      * @param bool $isNullable
+     * @param DataType|null $arrayKeyType
      */
-    public function __construct(string $type, int $arrayLevel = 0, bool $isNullable = false)
+    public function __construct(string $type, int $arrayLevel = 0, bool $isNullable = false, ?DataType $arrayKeyType = null)
     {
         $this->type = $type;
         $this->arrayLevel = $arrayLevel;
         $this->isNullable = $isNullable;
+        $this->arrayKeyType = $arrayKeyType;
     }
 
     public function getType(): string
@@ -70,15 +74,28 @@ class DataType
         );
     }
 
+    public function getArrayKeyType(): ?DataType
+    {
+        return $this->arrayKeyType;
+    }
+
     public static function parse(string $type, bool $forceNullable = false): self
     {
         $type = \trim($type);
 
         $arrayLevel = 0;
+        $arrayKeyType = null;
         if (\substr($type, -2) === '[]') {
             if (\preg_match('/^(.*?)((\[])+)$/', $type, $matches) === 1) {
                 $type = $matches[1];
                 $arrayLevel = \strlen($matches[2]) / 2;
+            }
+        } else if (\preg_match('/array<([^|]+)>/', $type, $matches) === 1) {
+            $arrayLevel = 1;
+            if (\strpos($matches[1], ',') > 1) {
+                [$arrayKeyType, $type] = \preg_split('/\s*,\s*/', $matches[1]);
+            } else {
+                $type = $matches[1];
             }
         }
 
@@ -87,6 +104,6 @@ class DataType
             $type = \substr($type, 1);
         }
 
-        return new self($type, $arrayLevel, $forceNullable);
+        return new self($type, $arrayLevel, $forceNullable, $arrayKeyType ? DataType::parse($arrayKeyType) : null);
     }
 }

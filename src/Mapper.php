@@ -40,7 +40,7 @@ class Mapper
         }
 
         if ($data === null) {
-            if ($type->isNullable() || (! $type->isNullable() && $this->mapperOptions->strictNullMapping === false)) {
+            if ($type->isNullable() || $this->mapperOptions->strictNullMapping === false) {
                 return null;
             } else {
                 throw new UnexpectedNullValueException();

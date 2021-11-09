@@ -30,7 +30,6 @@
     },
     "require-dev": {
         "jerodev/code-styles": "dev-master",
-        "phpstan/phpstan": "^0.12.53",
         "phpunit/phpunit": "^9.4"
     },
     "minimum-stability": "dev",

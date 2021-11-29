@@ -26,6 +26,10 @@ class ObjectMapper
 
         // Check if this is a PHP 8.1 enum
         if (\function_exists('enum_exists') && \enum_exists($className)) {
+            if (\is_array($data) && \array_key_exists('value', $data)) {
+                $data = $data['value'];
+            }
+
             return $className::from($data);
         }
 

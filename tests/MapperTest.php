@@ -7,6 +7,7 @@ use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Models\MapperOptions;
 use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
+use Jerodev\DataMapper\Tests\TestClasses\StatusEnum;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
@@ -92,6 +93,14 @@ final class MapperTest extends TestCase
 
         yield ['foo', 'string', 'foo'];
         yield ['7', 'string', 7];
+
+        if (\function_exists('enum_exists')) {
+            yield [
+                StatusEnum::Success,
+                StatusEnum::class,
+                'Success',
+            ];
+        }
     }
 
     public function arrayTypeDataProvider(): Generator

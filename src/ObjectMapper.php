@@ -24,6 +24,11 @@ class ObjectMapper
         $bluePrint = $this->bluePrinter->print($className);
         $className = $bluePrint->getClassName();
 
+        // Check if this is a PHP 8.1 enum
+        if (\function_exists('enum_exists') && \enum_exists($className)) {
+            return $className::from($data);
+        }
+
         // If the class implements MapsItself, just create the object using the mapObject function
         if ($bluePrint->isMappingItself()) {
             return \call_user_func([$className, 'mapObject'], $data, $this->mapper);

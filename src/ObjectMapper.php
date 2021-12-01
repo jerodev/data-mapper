@@ -26,11 +26,12 @@ class ObjectMapper
 
         // Check if this is a PHP 8.1 enum
         if (\function_exists('enum_exists') && \enum_exists($className)) {
+            // If the enum had been cast to an array, the value is now an array with a `name` and `value` key.
             if (\is_array($data) && \array_key_exists('value', $data)) {
                 $data = $data['value'];
             }
 
-            return $className::from($data);
+            return $this->mapper->getOptions()->enumTryFrom ? $className::tryFrom($data) : $className::from($data);
         }
 
         // If the class implements MapsItself, just create the object using the mapObject function

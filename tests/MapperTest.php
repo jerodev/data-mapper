@@ -62,10 +62,10 @@ final class MapperTest extends TestCase
     /** @test */
     public function it_should_allow_non_strict_null_mapping_through_options(): void
     {
-        $this->mapper = new Mapper(
-            new MapperOptions(false)
-        );
+        $options = new MapperOptions();
+        $options->strictNullMapping = false;
 
+        $this->mapper = new Mapper($options);
         $this->assertNull($this->mapper->map('int', null));
     }
 

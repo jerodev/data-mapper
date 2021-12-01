@@ -115,4 +115,9 @@ class Mapper
         // Unknown internal type.
         return $data;
     }
+
+    public function getOptions(): MapperOptions
+    {
+        return $this->mapperOptions;
+    }
 }

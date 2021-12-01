@@ -42,7 +42,7 @@ final class ObjectMapperTest extends TestCase
 
         $object = $this->mapper->map(PostMappingClass::class, $data);
 
-        $this->assertEquals(4, $object->value);
+        $this->assertSame(4, $object->value);
     }
 
     /** @test */
@@ -54,9 +54,9 @@ final class ObjectMapperTest extends TestCase
         ]);
         \assert($result instanceof ConstructorClass);
 
-        $this->assertEquals('foo', $result->foo);
-        $this->assertEquals('bar', $result->bar);
-        $this->assertEquals('boo', $result->baz);
+        $this->assertSame('foo', $result->foo);
+        $this->assertSame('bar', $result->bar);
+        $this->assertSame('boo', $result->baz);
     }
 
     /** @test */
@@ -90,7 +90,7 @@ final class ObjectMapperTest extends TestCase
             'bar' => 'baz',
         ]);
 
-        $this->assertEquals('baz', $mapped->getBar());
+        $this->assertSame('baz', $mapped->getBar());
         $this->assertNull($mapped->foo);
     }
 
@@ -107,9 +107,9 @@ final class ObjectMapperTest extends TestCase
             'numberOrString' => '7',
         ]);
 
-        $this->assertEquals('112', $result->extended);
-        $this->assertEquals('bar', $result->foo);
-        $this->assertEquals(7, $result->numberOrString);
+        $this->assertSame('112', $result->extended);
+        $this->assertSame('bar', $result->foo);
+        $this->assertSame(7, $result->numberOrString);
     }
 
     /** @test */
@@ -127,9 +127,9 @@ final class ObjectMapperTest extends TestCase
         ]);
         \assert($result instanceof RecursiveClass);
 
-        $this->assertEquals('foo', $result->value);
-        $this->assertEquals('bar', $result->recursive->value);
-        $this->assertEquals('baz', $result->recursive->recursive->value);
+        $this->assertSame('foo', $result->value);
+        $this->assertSame('bar', $result->recursive->value);
+        $this->assertSame('baz', $result->recursive->recursive->value);
     }
 
     /** @test */
@@ -146,11 +146,11 @@ final class ObjectMapperTest extends TestCase
             ]
         ]);
 
-        $this->assertEquals('bar', $result->foo);
-        $this->assertEquals(7, $result->number);
-        $this->assertEquals(3.14, $result->floatingPoint);
+        $this->assertSame('bar', $result->foo);
+        $this->assertSame(7, $result->number);
+        $this->assertSame(3.14, $result->floatingPoint);
         $this->assertTrue($result->checkbox);
-        $this->assertEquals($result->numbers,  [
+        $this->assertSame($result->numbers,  [
             'foo' => [1, 2],
             'bar' => [3],
         ]);
@@ -169,8 +169,8 @@ final class ObjectMapperTest extends TestCase
 
         $object = $this->mapper->map(UnionTypesClass::class, $data);
 
-        $this->assertEquals(5, $object->value);
-        $this->assertEquals('foo', $object->stringValue);
+        $this->assertSame(5, $object->value);
+        $this->assertSame('foo', $object->stringValue);
     }
 
     /** @test */
@@ -178,7 +178,7 @@ final class ObjectMapperTest extends TestCase
     {
         $result = $this->mapper->map(ArrayConstructorClass::class, ['integers' => ['5', '18']]);
 
-        $this->assertEquals([5, 18], $result->integers);
+        $this->assertSame([5, 18], $result->integers);
     }
 
     /** @test */
@@ -204,6 +204,6 @@ final class ObjectMapperTest extends TestCase
         ]);
 
         $this->assertInstanceOf(RecursiveClass::class, $result->recursive[0]);
-        $this->assertEquals('foo', $result->recursive[0]->value);
+        $this->assertSame('foo', $result->recursive[0]->value);
     }
 }

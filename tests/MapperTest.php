@@ -27,7 +27,7 @@ final class MapperTest extends TestCase
      */
     public function it_should_map_native_types($expected, string $type, $input): void
     {
-        $this->assertEquals($expected, $this->mapper->map($type, $input));
+        $this->assertSame($expected, $this->mapper->map($type, $input));
     }
 
     /**
@@ -77,8 +77,8 @@ final class MapperTest extends TestCase
         yield [['1', '2', '3'], 'iterable', ['1', '2', '3']];
         yield [['1'], 'iterable', '1'];
         yield [[], 'iterable', []];
-        yield [[['1']], 'int[][]', [[1]]];
-        yield [['first' => ['1'], 'second' => ['2', '3']], 'int[][]', ['first' => [1], 'second' => [2, 3]]];
+        yield [[['1']], 'string[][]', [[1]]];
+        yield [['first' => [1], 'second' => [2, 3]], 'int[][]', ['first' => ['1'], 'second' => ['2', '3']]];
 
         yield [true, 'bool', 'true'];
         yield [true, 'bool', 1];
@@ -112,6 +112,7 @@ final class MapperTest extends TestCase
         yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
         yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
         yield [['a' => 'b', 'b' => 'c', 4 => '3'], 'array<string>', ['a' => 'b', 'b' => 'c', 4 => 3]];
+        yield [[7 => 'b', 6 => 'c', 4 => '3'], 'array<int, string>', ['7' => 'b', '6' => 'c', 4 => 3]];
 
         $object = new SimpleClass();
         $object->foo = 'bar';

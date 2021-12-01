@@ -169,8 +169,8 @@ final class ObjectMapperTest extends TestCase
 
         $object = $this->mapper->map(UnionTypesClass::class, $data);
 
-        $this->assertSame(5, $object->value);
-        $this->assertSame('foo', $object->stringValue);
+        $this->assertEquals(5, $object->value);
+        $this->assertEquals('foo', $object->stringValue);
     }
 
     /** @test */

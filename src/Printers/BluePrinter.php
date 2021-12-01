@@ -38,9 +38,8 @@ class BluePrinter
             $source = \get_class($source);
         }
 
-        $cacheSlug = "{$source}";
-        if (\array_key_exists($cacheSlug, $this->bluePrintCache)) {
-            return $this->bluePrintCache[$cacheSlug];
+        if (\array_key_exists($source, $this->bluePrintCache)) {
+            return $this->bluePrintCache[$source];
         }
 
         $fqcn = $this->classNamePrinter->resolveClassName($source);
@@ -89,7 +88,7 @@ class BluePrinter
 
         $this->findPostMappingCallbacks($reflection, $bluePrint);
 
-        $this->bluePrintCache[$cacheSlug] = $bluePrint;
+        $this->bluePrintCache[$source] = $bluePrint;
 
         return $bluePrint;
     }
@@ -100,18 +99,15 @@ class BluePrinter
             return;
         }
 
-        if (\method_exists($reflection, 'getAttributes')) {
-            $postMappingAttributes = $reflection->getAttributes(PostMapping::class);
+        $postMappingAttributes = $reflection->getAttributes(PostMapping::class);
+        if (! empty($postMappingAttributes)) {
+            $arguments = $postMappingAttributes[0]->getArguments();
+            $bluePrint->setPostMappingFunction(\reset($arguments));
+            return;
+        }
 
-            if (! empty($postMappingAttributes)) {
-                $arguments = $postMappingAttributes[0]->getArguments();
-                $bluePrint->setPostMapping(\reset($arguments));
-                return;
-            }
-
-            if ($reflection->getParentClass() && $reflection->getParentClass()->isUserDefined()) {
-                $this->findPostMappingCallbacks($reflection->getParentClass(), $bluePrint);
-            }
+        if ($reflection->getParentClass() && $reflection->getParentClass()->isUserDefined()) {
+            $this->findPostMappingCallbacks($reflection->getParentClass(), $bluePrint);
         }
     }
 }

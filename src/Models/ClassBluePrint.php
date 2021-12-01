@@ -22,10 +22,10 @@ class ClassBluePrint
     private bool $mapsItself;
 
     /**
-     * A optional function to be called after mapping the object.
+     * An optional function to be called after mapping the object.
      * Can be defined using the `PostMapping` attribute on the class.
      */
-    private ?string $postMapping;
+    private ?string $postMappingFunction;
 
     /**
      * Information about all public properties on the class.
@@ -39,7 +39,7 @@ class ClassBluePrint
         $this->className = $className;
         $this->mapsItself = false;
         $this->constructorProperties = [];
-        $this->postMapping = null;
+        $this->postMappingFunction = null;
         $this->properties = [];
     }
 
@@ -73,14 +73,14 @@ class ClassBluePrint
         return $this->properties;
     }
 
-    public function getPostMapping(): ?string
+    public function getPostMappingFunction(): ?string
     {
-        return $this->postMapping;
+        return $this->postMappingFunction;
     }
 
-    public function setPostMapping(?string $postMapping): void
+    public function setPostMappingFunction(?string $postMappingFunction): void
     {
-        $this->postMapping = $postMapping;
+        $this->postMappingFunction = $postMappingFunction;
     }
 
     public function getProperty(string $name): ?PropertyBluePrint

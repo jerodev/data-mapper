@@ -50,8 +50,8 @@ class ObjectMapper
             $this->mapObjectProperties($object, $bluePrint, $data);
         }
 
-        if ($bluePrint->getPostMapping() !== null) {
-            $object->{$bluePrint->getPostMapping()}($data);
+        if ($bluePrint->getPostMappingFunction() !== null) {
+            $object->{$bluePrint->getPostMappingFunction()}($data);
         }
 
         return $object;

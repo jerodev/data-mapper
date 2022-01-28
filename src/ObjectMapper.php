@@ -13,12 +13,20 @@ class ObjectMapper
     private BluePrinter $bluePrinter;
     private Mapper $mapper;
 
-    public function __construct(Mapper $mapper, BluePrinter $bluePrinter)
-    {
-        $this->bluePrinter = $bluePrinter;
-        $this->mapper = $mapper;
+    public function __construct(
+        ?Mapper $mapper = null,
+        ?BluePrinter $bluePrinter = null
+    ) {
+        $this->bluePrinter = $bluePrinter ?? new BluePrinter();
+        $this->mapper = $mapper ?? new Mapper();
     }
 
+    /**
+     * @template T
+     * @param class-string<T> $className
+     * @param mixed $data
+     * @return T
+     */
     public function map(string $className, $data): object
     {
         $bluePrint = $this->bluePrinter->print($className);

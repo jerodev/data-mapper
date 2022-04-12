@@ -37,9 +37,6 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction
 
-      - name: Configure matchers
-        uses: mheap/phpunit-matcher-action@master
-
       - name: Code Styles
         run: vendor/bin/phpcs -p
 

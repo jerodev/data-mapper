@@ -113,6 +113,7 @@ final class MapperTest extends TestCase
         yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
         yield [['a' => 'b', 'b' => 'c', 4 => '3'], 'array<string>', ['a' => 'b', 'b' => 'c', 4 => 3]];
         yield [[7 => 'b', 6 => 'c', 4 => '3'], 'array<int, string>', ['7' => 'b', '6' => 'c', 4 => 3]];
+        yield [[7 => ['b'], 6 => ['c', '3']], 'array<int, string[]>', ['7' => ['b'], '6' => ['c', 3]]];
 
         $object = new SimpleClass();
         $object->foo = 'bar';

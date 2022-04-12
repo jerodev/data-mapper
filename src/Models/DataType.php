@@ -97,6 +97,12 @@ class DataType
             } else {
                 $type = $matches[1];
             }
+
+            // Is the value type itself an array?
+            if (\preg_match('/^(.*?)((\[])+)$/', $type, $matches) === 1) {
+                $type = $matches[1];
+                $arrayLevel += \strlen($matches[2]) / 2;
+            }
         }
 
         if (\substr($type, '0', 1) === '?') {

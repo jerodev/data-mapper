@@ -98,7 +98,7 @@ class ObjectMapper
             } else if (! $constructorProperty->isRequired()) {
                 $constructorValues[] = $constructorProperty->getDefaultValue();
             } else {
-                throw new ConstructorParameterMissingException($bluePrint->getClassName(), $constructorProperty->getName());
+                throw new ConstructorParameterMissingException($bluePrint->getClassName(), $constructorProperty->getName(), $data);
             }
         }
 

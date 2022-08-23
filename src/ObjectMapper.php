@@ -32,8 +32,8 @@ class ObjectMapper
         $bluePrint = $this->bluePrinter->print($className);
         $className = $bluePrint->getClassName();
 
-        // Check if this is a PHP 8.1 enum
-        if (\function_exists('enum_exists') && \enum_exists($className)) {
+        // Check if this is a PHP enum
+        if (\enum_exists($className)) {
             // If the enum had been cast to an array, the value is now an array with a `name` and `value` key.
             if (\is_array($data) && \array_key_exists('value', $data)) {
                 $data = $data['value'];

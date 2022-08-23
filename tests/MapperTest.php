@@ -94,13 +94,11 @@ final class MapperTest extends TestCase
         yield ['foo', 'string', 'foo'];
         yield ['7', 'string', 7];
 
-        if (\function_exists('enum_exists')) {
-            yield [
-                StatusEnum::Success,
-                StatusEnum::class,
-                'Success',
-            ];
-        }
+        yield [
+            StatusEnum::Success,
+            StatusEnum::class,
+            'Success',
+        ];
     }
 
     public function arrayTypeDataProvider(): Generator

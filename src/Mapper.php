@@ -6,7 +6,6 @@ use Jerodev\DataMapper\Exceptions\CouldNotMapValueException;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
-use function PHPUnit\Framework\throwException;
 
 class Mapper
 {

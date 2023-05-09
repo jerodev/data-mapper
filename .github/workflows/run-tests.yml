@@ -16,13 +16,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.composer/cache/files
-          key: dependencies-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+        uses: actions/cache@v3
+        with:with:
+            path: |
+                .phpstan-cache
+                vendor
+            key: composer-${{ hashFiles('composer.json') }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -33,7 +35,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer update --prefer-stable --prefer-dist --no-interaction
+        run: composer update --no-interaction
 
       - name: Code Styles
         run: vendor/bin/phpcs -p

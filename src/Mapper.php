@@ -3,6 +3,7 @@
 namespace Jerodev\DataMapper;
 
 use Jerodev\DataMapper\Exceptions\CouldNotMapValueException;
+use Jerodev\DataMapper\Objects\ObjectMapper;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -10,10 +11,12 @@ use Jerodev\DataMapper\Types\DataTypeFactory;
 class Mapper
 {
     private DataTypeFactory $dataTypeFactory;
+    private ObjectMapper $objectMapper;
 
     public function __construct()
     {
         $this->dataTypeFactory = new DataTypeFactory();
+        $this->objectMapper = new ObjectMapper();
     }
 
     /**
@@ -46,6 +49,8 @@ class Mapper
                 if ($type->isArray()) {
                     return $this->mapArray($type, $data);
                 }
+
+                return $this->mapObject($type, $data);
             } catch (CouldNotMapValueException) {
                 continue;
             }
@@ -93,5 +98,14 @@ class Mapper
         }
 
         return $mappedArray;
+    }
+
+    private function mapObject(DataType $type, mixed $data): ?object
+    {
+        if ($type->isNullable && $data === null) {
+            return null;
+        }
+
+        return $this->objectMapper->map($type, $data);
     }
 }

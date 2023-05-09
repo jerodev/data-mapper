@@ -2,7 +2,7 @@
 
 namespace Jerodev\DataMapper\Types;
 
-final class DataType
+class DataType
 {
     /**
      * @param string $type

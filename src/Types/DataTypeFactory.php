@@ -4,7 +4,7 @@ namespace Jerodev\DataMapper\Types;
 
 use Jerodev\DataMapper\Exceptions\UnexpectedTokenException;
 
-final class DataTypeFactory
+class DataTypeFactory
 {
     /** @var array<string, DataType> */
     private array $typeCache = [];

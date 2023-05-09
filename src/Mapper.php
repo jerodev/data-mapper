@@ -3,6 +3,7 @@
 namespace Jerodev\DataMapper;
 
 use Jerodev\DataMapper\Exceptions\CouldNotMapValueException;
+use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Objects\ObjectMapper;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
@@ -16,7 +17,7 @@ class Mapper
     public function __construct()
     {
         $this->dataTypeFactory = new DataTypeFactory();
-        $this->objectMapper = new ObjectMapper();
+        $this->objectMapper = new ObjectMapper($this);
     }
 
     /**
@@ -106,6 +107,10 @@ class Mapper
             return null;
         }
 
-        return $this->objectMapper->map($type, $data);
+        try {
+            return $this->objectMapper->map($type, $data);
+        } catch (CouldNotResolveClassException) {
+            throw new CouldNotMapValueException($data, $type);
+        }
     }
 }

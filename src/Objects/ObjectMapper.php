@@ -20,15 +20,17 @@ class ObjectMapper
 
     /**
      * @param DataType $type
-     * @param array $data
+     * @param array|string $data
      * @return object
      * @throws CouldNotResolveClassException
      */
-    public function map(DataType $type, array $data): object
+    public function map(DataType $type, array|string $data): object
     {
-        $class = $type->type;
-        if (! \class_exists($class)) {
-            $class = $this->classResolver->resolve($class);
+        $class = $this->classResolver->resolve($type->type);
+
+        // If the data is a string and the class is an enum, create the enum.
+        if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
+            return $class::from($data);
         }
 
         $mapFileName = 'mapper_' . \md5($class);
@@ -45,6 +47,6 @@ class ObjectMapper
     {
         $blueprint = $this->classBluePrinter->print($class);
 
-        var_dump($blueprint);die();
+//        var_dump($blueprint);die();
     }
 }

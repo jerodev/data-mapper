@@ -4,6 +4,7 @@ namespace Jerodev\DataMapper\Tests;
 
 use Generator;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
@@ -41,5 +42,7 @@ final class MapperTest extends TestCase
 
         yield ['string', 4, '4'];
         yield ['array<string>', [4, 5], ['4', '5']];
+
+        yield ['array<' . SuitEnum::class . '>', ['H', 'S'], [SuitEnum::Hearts, SuitEnum::Spades]];
     }
 }

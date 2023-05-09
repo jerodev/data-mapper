@@ -74,6 +74,10 @@ class Mapper
             throw new CouldNotMapValueException($data, $type);
         }
 
+        if ($type->isGenericArray()) {
+            return (array) $data;
+        }
+
         $keyType = null;
         $valueType = $type->genericTypes[0];
         if (\count($type->genericTypes) > 1) {

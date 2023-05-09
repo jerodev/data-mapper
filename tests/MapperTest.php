@@ -21,6 +21,8 @@ final class MapperTest extends TestCase
     {
         yield ['null', null, null];
 
+        yield ['array', [1, 'b'], [1, 'b']];
+
         yield ['bool[]', [true, false], [true, false]];
         yield ['bool', '1', true];
         yield ['bool', null, false];

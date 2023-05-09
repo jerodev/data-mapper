@@ -18,14 +18,18 @@ final class DataType
 
     public function isArray(): bool
     {
-        return ! empty($this->genericTypes)
-            && \in_array(
-                $this->type,
-                [
-                    'array',
-                    'iterable',
-                ],
-            );
+        return \in_array(
+            $this->type,
+            [
+                'array',
+                'iterable',
+            ],
+        );
+    }
+
+    public function isGenericArray(): bool
+    {
+        return $this->isArray() && empty($this->genericTypes);
     }
 
     /** @see https://www.php.net/manual/en/language.types.intro.php */

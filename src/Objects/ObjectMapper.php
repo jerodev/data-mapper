@@ -51,18 +51,30 @@ class ObjectMapper
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $argument) {
+            $arg = "\$data['{$argument['name']}']";
+
             if ($argument['type'] !== null) {
-                $arg = $this->castInMapperFunction($argument, $argument['name']);
+                $arg = $this->castInMapperFunction($arg, $argument['type']);
+                if (\array_key_exists('default', $argument)) {
+                    $arg = $this->wrapDefault($arg, $argument['name'], $argument['default']);
+                }
             }
 
             $args[] = $arg;
         }
         $content = '$x = new ' . $class . '(' . \implode(', ', $args) . ');';
 
+        // Map properties
         foreach ($blueprint->properties as $name => $property) {
-            $content.= \PHP_EOL . '    $x->' . $name . ' = ' . $this->castInMapperFunction($property, $name) . ';';
+            $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type']);
+            if (\array_key_exists('default', $property)) {
+                $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
+            }
+
+            $content.= \PHP_EOL . '    $x->' . $name . ' = ' . $propertyMap . ';';
         }
 
+        // Render the function
         $mapperClass = Mapper::class;
         return <<<PHP
         <?php
@@ -75,47 +87,42 @@ class ObjectMapper
         PHP;
     }
 
-    /**
-     * @param array{type: DataTypeCollection, default?: mixed} $property
-     * @param string $propertyName
-     * @return string
-     */
-    private function castInMapperFunction(array $property, string $propertyName): string
+    private function castInMapperFunction(string $propertyName, DataTypeCollection $type): string
     {
-        $value = "\$data['{$propertyName}']";
-        $newValue = null;
-
-        if (\count($property['type']->types) === 1) {
-            $type = $property['type']->types[0];
+        if (\count($type->types) === 1) {
+            $type = $type->types[0];
             if ($type->isNative()) {
-                $newValue = match ($type->type) {
+                return match ($type->type) {
                     'null' => 'null',
-                    'bool' => "\\filter_var({$value}, \FILTER_VALIDATE_BOOL)",
-                    'float' => '(float) ' . $value,
-                    'int' => '(int) ' . $value,
-                    'string' => '(string) ' . $value,
-                    'object' => '(object) ' . $value,
-                    default => $value,
+                    'bool' => "\\filter_var({$propertyName}, \FILTER_VALIDATE_BOOL)",
+                    'float' => '(float) ' . $propertyName,
+                    'int' => '(int) ' . $propertyName,
+                    'string' => '(string) ' . $propertyName,
+                    'object' => '(object) ' . $propertyName,
+                    default => $propertyName,
                 };
             }
 
-            if ($type->isGenericArray()) {
-                $newValue = '(array) ' . $value;
+            if ($type->isArray()) {
+                if ($type->isGenericArray()) {
+                    return '(array) ' . $propertyName;
+                }
+                if (\count($type->genericTypes) === 1) {
+                    $uniqid = \uniqid();
+                    return "\\array_map(static fn (\$x{$uniqid}) => " . $this->castInMapperFunction('$x' . $uniqid, $type->genericTypes[0]) . ", {$propertyName})";
+                }
             }
 
             if (\is_subclass_of($type->type, \BackedEnum::class)) {
-                $newValue = "{$type->type}::from({$value})";
+                return "{$type->type}::from({$propertyName})";
             }
         }
 
-        if ($newValue === null) {
-            $newValue = '$mapper->map(\'' . $property['type']->__toString() . '\', ' . $value . ')';
-        }
+        return '$mapper->map(\'' . $type->__toString() . '\', ' . $propertyName . ')';
+    }
 
-        if (\array_key_exists('default', $property)) {
-            $newValue = "(\\array_key_exists('{$propertyName}', \$data) ? {$newValue} : " . \var_export($property['default'], true) . ')';
-        }
-
-        return $newValue;
+    private function wrapDefault(string $value, string $arrayKey, mixed $defaultValue): string
+    {
+        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
     }
 }

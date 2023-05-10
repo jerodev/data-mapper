@@ -10,7 +10,7 @@ use Closure;
  * Can be either the name of a public function on the class, or a closure accepting the new object.
  * The function is gets the data array as a first parameter and the new object as the second.
  */
-#[Attribute(Attribute::TARGET_CLASS)]
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class PostMapping
 {
     public function __construct(

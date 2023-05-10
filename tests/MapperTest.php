@@ -78,8 +78,9 @@ final class MapperTest extends TestCase
             $dto
         ];
 
-        $dto = new SuperUserDto('Superman');
+        $dto = new SuperUserDto('Superman'); // Uppercase because UserDto post mapping
         $dto->canFly = true;
+        $dto->stars = 3;    // Increased 3 times by post mapping function
         yield [
             SuperUserDto::class,
             [

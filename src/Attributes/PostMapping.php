@@ -14,7 +14,7 @@ use Closure;
 class PostMapping
 {
     public function __construct(
-        public string|Closure $postMappingCallback
+        public string|Closure $postMappingCallback,
     ) {
     }
 }

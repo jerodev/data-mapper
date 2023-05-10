@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Attribute;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 
 class ClassBluePrint
@@ -11,4 +12,7 @@ class ClassBluePrint
 
     /** @var array<string, array{type: DataTypeCollection, default?: mixed}> */
     public array $properties = [];
+
+    /** @var array<Attribute> */
+    public array $classAttributes = [];
 }

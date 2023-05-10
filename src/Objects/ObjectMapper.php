@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Types\DataType;
@@ -72,6 +73,17 @@ class ObjectMapper
             }
 
             $content.= \PHP_EOL . '    $x->' . $name . ' = ' . $propertyMap . ';';
+        }
+
+        // Post mapping functions?
+        foreach ($blueprint->classAttributes as $attribute) {
+            if ($attribute instanceof PostMapping) {
+                if (\is_string($attribute->postMappingCallback)) {
+                    $content.= \PHP_EOL . \PHP_EOL . "    \$x->{$attribute->postMappingCallback}(\$data, \$x);";
+                } else {
+                    $content.= \PHP_EOL . \PHP_EOL . "    \call_user_func({$attribute->postMappingCallback}, \$data, \$x);";
+                }
+            }
         }
 
         // Render the function

@@ -27,6 +27,7 @@ class ClassBluePrinter
         $blueprint = new ClassBluePrint();
         $this->printConstructor($reflection, $blueprint);
         $this->printProperties($reflection, $blueprint);
+        $this->printAttributes($reflection, $blueprint);
 
         return $blueprint;
     }
@@ -91,6 +92,11 @@ class ClassBluePrinter
 
             $blueprint->properties[$property->getName()] = $mapped;
         }
+    }
+
+    private function printAttributes(ReflectionClass $reflection, ClassBluePrint $blueprint): void
+    {
+        $blueprint->classAttributes = $reflection->getAttributes();
     }
 
     private function resolveType(DataTypeCollection $type, string $className): DataTypeCollection

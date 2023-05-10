@@ -51,35 +51,44 @@ class ObjectMapper
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $argument) {
-            $arg = '$data[\'' . $argument['name'] . '\']';
             if ($argument['type'] !== null) {
-                $arg = $this->castInMapperFunction($argument['type'], $arg);
+                $arg = $this->castInMapperFunction($argument, $argument['name']);
             }
 
             $args[] = $arg;
         }
         $content = '$x = new ' . $class . '(' . \implode(', ', $args) . ');';
 
-        // TODO: map properties
+        foreach ($blueprint->properties as $name => $property) {
+            $content.= \PHP_EOL . '$x->' . $name . ' = ' . $this->castInMapperFunction($property, $name) . ';';
+        }
 
         $mapperClass = Mapper::class;
         return <<<PHP
         <?php
         function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
         {
-            {$content};
+            {$content}
 
             return \$x;
         }
         PHP;
     }
 
-    private function castInMapperFunction(DataTypeCollection $type, string $value): string
+    /**
+     * @param array{type: DataTypeCollection, default?: mixed} $property
+     * @param string $propertyName
+     * @return string
+     */
+    private function castInMapperFunction(array $property, string $propertyName): string
     {
-        if (\count($type->types) === 1) {
-            $type = $type->types[0];
+        $value = "\$data['{$propertyName}']";
+        $newValue = null;
+
+        if (\count($property['type']->types) === 1) {
+            $type = $property['type']->types[0];
             if ($type->isNative()) {
-                return match ($type->type) {
+                $newValue = match ($type->type) {
                     'null' => 'null',
                     'bool' => "\\filter_var({$value}, \FILTER_VALIDATE_BOOL)",
                     'float' => '(float) ' . $value,
@@ -91,10 +100,18 @@ class ObjectMapper
             }
 
             if ($type->isGenericArray()) {
-                return '(array) ' . $value;
+                $newValue = '(array) ' . $value;
             }
         }
 
-        return '$mapper->map(\'' . $type->__toString() . '\', ' . $value . ')';
+        if ($newValue === null) {
+            $newValue = '$mapper->map(\'' . $property['type']->__toString() . '\', ' . $value . ')';
+        }
+
+        if (\array_key_exists('default', $property)) {
+            $newValue = "(\\array_key_exists('{$propertyName}', \$data) ? {$newValue} : " . \var_export($property['default'], true) . ')';
+        }
+
+        return $newValue;
     }
 }

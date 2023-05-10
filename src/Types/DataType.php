@@ -12,7 +12,7 @@ class DataType
     public function __construct(
         public readonly string $type,
         public readonly bool $isNullable,
-        public array $genericTypes = [],
+        public readonly array $genericTypes = [],
     ) {
     }
 

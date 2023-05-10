@@ -26,7 +26,7 @@ final class ClassBluePrinterTest extends TestCase
         yield [
             UserDto::class,
             [['name' => 'name', 'type' => 'string']],
-            ['name' => 'string', 'friends' => 'array<UserDto>'],
+            ['name' => ['type' => 'string'], 'friends' => ['type' => 'array<UserDto>', 'default' => []]],
         ];
     }
 }

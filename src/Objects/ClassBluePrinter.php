@@ -7,11 +7,13 @@ use ReflectionClass;
 
 class ClassBluePrinter
 {
+    private readonly ClassResolver $classResolver;
     private readonly DocBlockParser $docBlockParser;
     private readonly DataTypeFactory $dataTypeFactory;
 
     public function __construct()
     {
+        $this->classResolver = new ClassResolver();
         $this->dataTypeFactory = new DataTypeFactory();
         $this->docBlockParser = new DocBlockParser();
     }
@@ -75,7 +77,14 @@ class ClassBluePrinter
                 }
             }
 
-            $blueprint->properties[$property->getName()] = $this->dataTypeFactory->fromString($type);
+            $mapped = [
+                'type' => $this->dataTypeFactory->fromString($type)
+            ];
+            if ($property->hasDefaultValue()) {
+                $mapped['default'] = $property->getDefaultValue();
+            }
+
+            $blueprint->properties[$property->getName()] = $mapped;
         }
     }
 }

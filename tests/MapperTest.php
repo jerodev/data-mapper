@@ -2,9 +2,11 @@
 
 namespace Jerodev\DataMapper\Tests;
 
+use Couchbase\User;
 use Generator;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
+use Jerodev\DataMapper\Tests\_Mocks\UserDto;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
@@ -17,11 +19,17 @@ final class MapperTest extends TestCase
     {
         $this->assertSame($expectation, (new Mapper())->map($type, $value));
     }
+    /**
+     * @test
+     * @dataProvider objectValuesDataProvider
+     */
+    public function it_should_map_objects(string $type, mixed $value, mixed $expectation): void
+    {
+        $this->assertEquals($expectation, (new Mapper())->map($type, $value));
+    }
 
     public static function nativeValuesDataProvider(): Generator
     {
-        yield ['Mapper', [], null];
-
         yield ['null', null, null];
 
         yield ['array', [1, 'b'], [1, 'b']];
@@ -44,5 +52,27 @@ final class MapperTest extends TestCase
         yield ['array<string>', [4, 5], ['4', '5']];
 
         yield ['array<' . SuitEnum::class . '>', ['H', 'S'], [SuitEnum::Hearts, SuitEnum::Spades]];
+    }
+
+    public static function objectValuesDataProvider(): Generator
+    {
+        yield ['Mapper', [], new Mapper()];
+
+        $dto = new UserDto('Jeroen');
+        $dto->friends = [
+            new UserDto('John'),
+            new UserDto('Jane'),
+        ];
+        yield [
+            UserDto::class,
+            [
+                'name' => 'Jeroen',
+                'friends' => [
+                    ['name' => 'John'],
+                    ['name' => 'Jane'],
+                ],
+            ],
+            $dto
+        ];
     }
 }

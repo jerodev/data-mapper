@@ -12,9 +12,9 @@ use Jerodev\DataMapper\Types\DataTypeFactory;
 
 class Mapper
 {
-    private DataTypeFactory $dataTypeFactory;
-    private ObjectMapper $objectMapper;
-    private MapperConfig $config;
+    private readonly DataTypeFactory $dataTypeFactory;
+    private readonly ObjectMapper $objectMapper;
+    public readonly MapperConfig $config;
 
     public function __construct(
         ?MapperConfig $config = null,

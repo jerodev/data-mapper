@@ -26,13 +26,17 @@ class ObjectMapper
      * @return object
      * @throws CouldNotResolveClassException
      */
-    public function map(DataType $type, array|string $data): object
+    public function map(DataType $type, array|string $data): ?object
     {
         $class = $this->classResolver->resolve($type->type);
 
         // If the data is a string and the class is an enum, create the enum.
         if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
-            return $class::from($data);
+            if ($this->mapper->config->enumTryFrom) {
+                return $class::tryFrom($data);
+            } else {
+                return $class::from($data);
+            }
         }
 
         $mapFileName = 'mapper_' . \md5($class);
@@ -126,7 +130,9 @@ class ObjectMapper
             }
 
             if (\is_subclass_of($type->type, \BackedEnum::class)) {
-                return "{$type->type}::from({$propertyName})";
+                $enumFunction = $this->mapper->config->enumTryFrom ? 'tryFrom' : 'from';
+
+                return "{$type->type}::{$enumFunction}({$propertyName})";
             }
         }
 

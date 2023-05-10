@@ -2,6 +2,9 @@
 
 namespace Jerodev\DataMapper\Tests\_Mocks;
 
+use Jerodev\DataMapper\Attributes\PostMapping;
+
+#[PostMapping('post')]
 class UserDto
 {
     /** First name and last name */
@@ -14,5 +17,10 @@ class UserDto
     public function __construct(string $name)
     {
         $this->name = $name;
+    }
+
+    public function post(): void
+    {
+        $this->name = \ucfirst($this->name);
     }
 }

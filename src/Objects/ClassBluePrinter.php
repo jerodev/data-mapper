@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -9,13 +10,11 @@ use ReflectionClass;
 
 class ClassBluePrinter
 {
-    private readonly ClassResolver $classResolver;
     private readonly DocBlockParser $docBlockParser;
     private readonly DataTypeFactory $dataTypeFactory;
 
     public function __construct()
     {
-        $this->classResolver = new ClassResolver();
         $this->dataTypeFactory = new DataTypeFactory();
         $this->docBlockParser = new DocBlockParser();
     }
@@ -27,6 +26,7 @@ class ClassBluePrinter
         $blueprint = new ClassBluePrint();
         $this->printConstructor($reflection, $blueprint);
         $this->printProperties($reflection, $blueprint);
+        $this->printAttributes($reflection, $blueprint);
 
         return $blueprint;
     }
@@ -90,6 +90,18 @@ class ClassBluePrinter
             }
 
             $blueprint->properties[$property->getName()] = $mapped;
+        }
+    }
+
+    private function printAttributes(ReflectionClass $reflection, ClassBluePrint $blueprint): void
+    {
+        foreach ($reflection->getAttributes(PostMapping::class) as $attribute) {
+            $blueprint->classAttributes[] = $attribute->newInstance();
+        }
+
+        // Also check parent for relevant attributes
+        if ($reflection->getParentClass()) {
+            $this->printAttributes($reflection->getParentClass(), $blueprint);
         }
     }
 

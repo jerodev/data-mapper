@@ -2,14 +2,17 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Jerodev\DataMapper\Types\DataTypeFactory;
 use ReflectionClass;
 
 class ClassBluePrinter
 {
     private readonly DocBlockParser $docBlockParser;
+    private readonly DataTypeFactory $dataTypeFactory;
 
     public function __construct()
     {
+        $this->dataTypeFactory = new DataTypeFactory();
         $this->docBlockParser = new DocBlockParser();
     }
 
@@ -46,7 +49,7 @@ class ClassBluePrinter
 
             $arg = [
                 'name' => $param->getName(),
-                'type' => $type,
+                'type' => $this->dataTypeFactory->fromString($type),
             ];
             if ($param->isDefaultValueAvailable()) {
                 $arg['default'] = $param->getDefaultValue();
@@ -72,7 +75,7 @@ class ClassBluePrinter
                 }
             }
 
-            $blueprint->properties[$property->getName()] = $type;
+            $blueprint->properties[$property->getName()] = $this->dataTypeFactory->fromString($type);
         }
     }
 }

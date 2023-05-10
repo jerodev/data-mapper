@@ -4,6 +4,7 @@ namespace Jerodev\DataMapper;
 
 use Jerodev\DataMapper\Exceptions\CouldNotMapValueException;
 use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
+use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Objects\ObjectMapper;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
@@ -13,11 +14,14 @@ class Mapper
 {
     private DataTypeFactory $dataTypeFactory;
     private ObjectMapper $objectMapper;
+    private MapperConfig $config;
 
-    public function __construct()
-    {
+    public function __construct(
+        ?MapperConfig $config = null,
+    ) {
         $this->dataTypeFactory = new DataTypeFactory();
         $this->objectMapper = new ObjectMapper($this);
+        $this->config = $config ?? new MapperConfig();
     }
 
     /**
@@ -36,8 +40,12 @@ class Mapper
             );
         }
 
-        if ($data === 'null' && $typeCollection->isNullable()) {
-            return null;
+        if ($data === 'null' || $data === null) {
+            if ($this->config->strictNullMapping === false || $typeCollection->isNullable()) {
+                return null;
+            }
+
+            throw new UnexpectedNullValueException($typeCollection->__toString());
         }
 
         // Loop over all possible types and parse to the first one that matches
@@ -103,10 +111,6 @@ class Mapper
 
     private function mapObject(DataType $type, mixed $data): ?object
     {
-        if ($type->isNullable && $data === null) {
-            return null;
-        }
-
         try {
             return $this->objectMapper->map($type, $data);
         } catch (CouldNotResolveClassException) {

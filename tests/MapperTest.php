@@ -2,9 +2,10 @@
 
 namespace Jerodev\DataMapper\Tests;
 
-use Couchbase\User;
 use Generator;
+use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
@@ -29,6 +30,17 @@ final class MapperTest extends TestCase
         $this->assertEquals($expectation, (new Mapper())->map($type, $value));
     }
 
+    /** @test */
+    public function it_should_throw_on_unexpected_null_value(): void
+    {
+        $config = new MapperConfig();
+        $config->strictNullMapping = true;
+
+        $this->expectException(UnexpectedNullValueException::class);
+
+        (new Mapper($config))->map('string', null);
+    }
+
     public static function nativeValuesDataProvider(): Generator
     {
         yield ['null', null, null];
@@ -37,7 +49,7 @@ final class MapperTest extends TestCase
 
         yield ['bool[]', [true, false], [true, false]];
         yield ['bool', '1', true];
-        yield ['bool', null, false];
+        yield ['bool', '', false];
 
         yield ['float', 6.8, 6.8];
         yield ['float', 5, 5.0];

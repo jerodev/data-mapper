@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -94,10 +95,14 @@ class ClassBluePrinter
 
     private function printAttributes(ReflectionClass $reflection, ClassBluePrint $blueprint): void
     {
-        $blueprint->classAttributes = \array_map(
-            static fn (\ReflectionAttribute $ra) => $ra->newInstance(),
-            $reflection->getAttributes(),
-        );
+        foreach ($reflection->getAttributes(PostMapping::class) as $attribute) {
+            $blueprint->classAttributes[] = $attribute->newInstance();
+        }
+
+        // Also check parent for relevant attributes
+        if ($reflection->getParentClass()) {
+            $this->printAttributes($reflection->getParentClass(), $blueprint);
+        }
     }
 
     private function resolveType(DataTypeCollection $type, string $className): DataTypeCollection

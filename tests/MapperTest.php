@@ -78,12 +78,12 @@ final class MapperTest extends TestCase
             $dto
         ];
 
-        $dto = new SuperUserDto('SuperMan');
+        $dto = new SuperUserDto('Superman');
         $dto->canFly = true;
         yield [
             SuperUserDto::class,
             [
-                'name' => 'SuperMan',
+                'name' => 'superman',
                 'canFly' => true,
             ],
             $dto,

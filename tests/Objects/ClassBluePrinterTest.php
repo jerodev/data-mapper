@@ -5,6 +5,8 @@ namespace Jerodev\DataMapper\Tests\Objects;
 use Generator;
 use Jerodev\DataMapper\Objects\ClassBluePrinter;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
+use Jerodev\DataMapper\Types\DataType;
+use Jerodev\DataMapper\Types\DataTypeCollection;
 use PHPUnit\Framework\TestCase;
 
 final class ClassBluePrinterTest extends TestCase
@@ -25,8 +27,35 @@ final class ClassBluePrinterTest extends TestCase
     {
         yield [
             UserDto::class,
-            [['name' => 'name', 'type' => 'string']],
-            ['name' => ['type' => 'string'], 'friends' => ['type' => 'array<UserDto>', 'default' => []]],
+            [
+                [
+                    'name' => 'name',
+                    'type' => new DataTypeCollection([
+                        new DataType('string', false),
+                    ]),
+                ],
+            ],
+            [
+                'name' => [
+                    'type' => new DataTypeCollection([
+                        new DataType('string', false),
+                    ]),
+                ],
+                'friends' => [
+                    'type' => new DataTypeCollection([
+                        new DataType(
+                            'array',
+                            false,
+                            [
+                                new DataTypeCollection([
+                                    new DataType(UserDto::class, false),
+                                ]),
+                            ],
+                        ),
+                    ]),
+                    'default' => [],
+                ],
+            ],
         ];
     }
 }

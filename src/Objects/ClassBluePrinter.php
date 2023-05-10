@@ -2,6 +2,8 @@
 
 namespace Jerodev\DataMapper\Objects;
 
+use Jerodev\DataMapper\Types\DataType;
+use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
 use ReflectionClass;
 
@@ -51,7 +53,7 @@ class ClassBluePrinter
 
             $arg = [
                 'name' => $param->getName(),
-                'type' => $this->dataTypeFactory->fromString($type),
+                'type' => $this->resolveType($this->dataTypeFactory->fromString($type), $reflection->getName()),
             ];
             if ($param->isDefaultValueAvailable()) {
                 $arg['default'] = $param->getDefaultValue();
@@ -78,7 +80,10 @@ class ClassBluePrinter
             }
 
             $mapped = [
-                'type' => $this->dataTypeFactory->fromString($type)
+                'type' => $this->resolveType(
+                    $this->dataTypeFactory->fromString($type),
+                    $reflection->getName(),
+                ),
             ];
             if ($property->hasDefaultValue()) {
                 $mapped['default'] = $property->getDefaultValue();
@@ -86,5 +91,32 @@ class ClassBluePrinter
 
             $blueprint->properties[$property->getName()] = $mapped;
         }
+    }
+
+    private function resolveType(DataTypeCollection $type, string $className): DataTypeCollection
+    {
+        $baseClassName = \explode('\\', $className);
+        $baseClassName = \end($baseClassName);
+
+        $collection = [];
+        foreach ($type->types as $dataType) {
+            $generics = [];
+            foreach ($dataType->genericTypes as $genericType) {
+                $generics[] = $this->resolveType($genericType, $className);
+            }
+
+            $typeName = $dataType->type;
+            if (\in_array($typeName, ['self', 'static', $baseClassName])) {
+                $typeName = $className;
+            }
+
+            $collection[] = new DataType(
+                $typeName,
+                $dataType->isNullable,
+                $generics,
+            );
+        }
+
+        return new DataTypeCollection($collection);
     }
 }

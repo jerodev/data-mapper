@@ -60,7 +60,7 @@ class ObjectMapper
         $content = '$x = new ' . $class . '(' . \implode(', ', $args) . ');';
 
         foreach ($blueprint->properties as $name => $property) {
-            $content.= \PHP_EOL . '$x->' . $name . ' = ' . $this->castInMapperFunction($property, $name) . ';';
+            $content.= \PHP_EOL . '    $x->' . $name . ' = ' . $this->castInMapperFunction($property, $name) . ';';
         }
 
         $mapperClass = Mapper::class;

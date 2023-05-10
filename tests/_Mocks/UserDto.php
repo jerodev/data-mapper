@@ -7,7 +7,7 @@ class UserDto
     /** First name and last name */
     public string $name;
 
-    /** @var array<UserDto> */
+    /** @var array<self> */
     public array $friends = [];
 
     public function __construct(string $name)

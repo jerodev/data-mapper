@@ -6,6 +6,7 @@ use Couchbase\User;
 use Generator;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
+use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
 use PHPUnit\Framework\TestCase;
 
@@ -70,11 +71,22 @@ final class MapperTest extends TestCase
                 'name' => 'Jeroen',
                 'favoriteSuit' => 'D',
                 'friends' => [
-                    ['name' => 'John'],
-                    ['name' => 'Jane'],
+                    ['name' => 'john'],
+                    ['name' => 'jane'],
                 ],
             ],
             $dto
+        ];
+
+        $dto = new SuperUserDto('SuperMan');
+        $dto->canFly = true;
+        yield [
+            SuperUserDto::class,
+            [
+                'name' => 'SuperMan',
+                'canFly' => true,
+            ],
+            $dto,
         ];
     }
 }

@@ -9,13 +9,11 @@ use ReflectionClass;
 
 class ClassBluePrinter
 {
-    private readonly ClassResolver $classResolver;
     private readonly DocBlockParser $docBlockParser;
     private readonly DataTypeFactory $dataTypeFactory;
 
     public function __construct()
     {
-        $this->classResolver = new ClassResolver();
         $this->dataTypeFactory = new DataTypeFactory();
         $this->docBlockParser = new DocBlockParser();
     }
@@ -96,7 +94,10 @@ class ClassBluePrinter
 
     private function printAttributes(ReflectionClass $reflection, ClassBluePrint $blueprint): void
     {
-        $blueprint->classAttributes = $reflection->getAttributes();
+        $blueprint->classAttributes = \array_map(
+            static fn (\ReflectionAttribute $ra) => $ra->newInstance(),
+            $reflection->getAttributes(),
+        );
     }
 
     private function resolveType(DataTypeCollection $type, string $className): DataTypeCollection

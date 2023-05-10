@@ -68,6 +68,14 @@ class Mapper
         throw new CouldNotMapValueException($data, $typeCollection);
     }
 
+    /**
+     * Remove cached class mappers.
+     */
+    public function clearCache(): void
+    {
+        $this->objectMapper->clearCache();
+    }
+
     private function mapNativeType(DataType $type, mixed $data): float|object|bool|int|string|null
     {
         return match ($type->type) {

@@ -161,12 +161,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/jerodev/code-styles.git",
-                "reference": "8afc076c06172bf5c254a196cc13569e8285fba4"
+                "reference": "3a0d433404bc5d9f398619d28130affcf25eca76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jerodev/code-styles/zipball/8afc076c06172bf5c254a196cc13569e8285fba4",
-                "reference": "8afc076c06172bf5c254a196cc13569e8285fba4",
+                "url": "https://api.github.com/repos/jerodev/code-styles/zipball/3a0d433404bc5d9f398619d28130affcf25eca76",
+                "reference": "3a0d433404bc5d9f398619d28130affcf25eca76",
                 "shasum": ""
             },
             "require": {
@@ -189,7 +189,7 @@
                 "source": "https://github.com/jerodev/code-styles/tree/master",
                 "issues": "https://github.com/jerodev/code-styles/issues"
             },
-            "time": "2023-05-10T18:34:44+00:00"
+            "time": "2023-05-10T18:43:22+00:00"
         },
         {
             "name": "myclabs/deep-copy",

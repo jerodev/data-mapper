@@ -13,14 +13,16 @@ use ValueError;
 class ObjectMapperTest extends TestCase
 {
     /** @test */
-    public function it_should_throw_on_invalid_enum_value(): void
+    public function it_should_not_retain_mapper_files_in_debug_mode(): void
     {
-        $this->expectException(ValueError::class);
+        $config = new MapperConfig();
+        $config->debug = true;
 
-        (new ObjectMapper(new Mapper()))->map(
-            new DataType(SuitEnum::class, false),
-            'x',
-        );
+        $objectMapper = new ObjectMapper(new Mapper($config));
+        $objectMapper->map(new DataType(Mapper::class, false), []);
+        unset($objectMapper);
+
+        $this->assertEmpty(\glob($config->classMapperDirectory . '/*.php'));
     }
 
     /** @test */
@@ -35,5 +37,34 @@ class ObjectMapperTest extends TestCase
         );
 
         $this->assertNull($value);
+    }
+
+    /** @test */
+    public function it_should_save_mappers_in_cache_directory(): void
+    {
+        $config = new MapperConfig();
+        $config->classMapperDirectory = __DIR__ . '/' . \uniqid();
+
+        (new Mapper($config))->map(MapperConfig::class, []);
+
+        $this->assertCount(
+            1,
+            $files = \glob($config->classMapperDirectory . '/*.php'),
+        );
+
+        // Clean up generated files
+        \unlink($files[0]);
+        \rmdir($config->classMapperDirectory);
+    }
+
+    /** @test */
+    public function it_should_throw_on_invalid_enum_value(): void
+    {
+        $this->expectException(ValueError::class);
+
+        (new ObjectMapper(new Mapper()))->map(
+            new DataType(SuitEnum::class, false),
+            'x',
+        );
     }
 }

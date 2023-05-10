@@ -9,7 +9,7 @@ class DataTypeFactory
     /** @var array<string, DataTypeCollection> */
     private array $typeCache = [];
 
-    public function fromString(string $rawType): DataTypeCollection
+    public function fromString(string $rawType, bool $forceNullable = false): DataTypeCollection
     {
         $rawType = \trim($rawType);
 
@@ -20,7 +20,7 @@ class DataTypeFactory
         $tokens = $this->tokenize($rawType);
         if (\count($tokens) === 1) {
             return $this->typeCache[$rawType] = new DataTypeCollection([
-                new DataType($rawType, false),
+                new DataType($rawType, $forceNullable),
             ]);
         }
 

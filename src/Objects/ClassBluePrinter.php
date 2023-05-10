@@ -81,7 +81,7 @@ class ClassBluePrinter
 
             $mapped = [
                 'type' => $this->resolveType(
-                    $this->dataTypeFactory->fromString($type),
+                    $this->dataTypeFactory->fromString($type, $property->getType()->allowsNull()),
                     $reflection->getName(),
                 ),
             ];

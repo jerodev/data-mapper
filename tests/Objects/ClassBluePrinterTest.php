@@ -4,6 +4,7 @@ namespace Jerodev\DataMapper\Tests\Objects;
 
 use Generator;
 use Jerodev\DataMapper\Objects\ClassBluePrinter;
+use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
@@ -54,6 +55,12 @@ final class ClassBluePrinterTest extends TestCase
                         ),
                     ]),
                     'default' => [],
+                ],
+                'favoriteSuit' => [
+                    'type' => new DataTypeCollection([
+                        new DataType(SuitEnum::class, true)
+                    ]),
+                    'default' => null,
                 ],
             ],
         ];

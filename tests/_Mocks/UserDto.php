@@ -9,6 +9,7 @@ class UserDto
 
     /** @var array<self> */
     public array $friends = [];
+    public ?SuitEnum $favoriteSuit = null;
 
     public function __construct(string $name)
     {

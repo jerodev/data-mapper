@@ -59,6 +59,7 @@ final class MapperTest extends TestCase
         yield ['Mapper', [], new Mapper()];
 
         $dto = new UserDto('Jeroen');
+        $dto->favoriteSuit = SuitEnum::Diamonds;
         $dto->friends = [
             new UserDto('John'),
             new UserDto('Jane'),
@@ -67,6 +68,7 @@ final class MapperTest extends TestCase
             UserDto::class,
             [
                 'name' => 'Jeroen',
+                'favoriteSuit' => 'D',
                 'friends' => [
                     ['name' => 'John'],
                     ['name' => 'Jane'],

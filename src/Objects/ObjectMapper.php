@@ -102,6 +102,10 @@ class ObjectMapper
             if ($type->isGenericArray()) {
                 $newValue = '(array) ' . $value;
             }
+
+            if (\is_subclass_of($type->type, \BackedEnum::class)) {
+                $newValue = "{$type->type}::from({$value})";
+            }
         }
 
         if ($newValue === null) {

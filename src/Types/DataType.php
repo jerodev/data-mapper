@@ -12,7 +12,7 @@ class DataType
     public function __construct(
         public readonly string $type,
         public readonly bool $isNullable,
-        public readonly array $genericTypes = [],
+        public array $genericTypes = [],
     ) {
     }
 
@@ -46,5 +46,20 @@ class DataType
                 'object',
             ],
         );
+    }
+
+    public function __toString(): string
+    {
+        $type = $this->type;
+
+        if ($this->isNullable) {
+            $type = '?' . $this->type;
+        }
+
+        if (! empty($this->genericTypes)) {
+            $type .= '<' . \implode(', ', \array_map(static fn (DataTypeCollection $type) => $type->__toString(), $this->genericTypes)) . '>';
+        }
+
+        return $type;
     }
 }

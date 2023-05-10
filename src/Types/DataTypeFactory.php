@@ -6,33 +6,31 @@ use Jerodev\DataMapper\Exceptions\UnexpectedTokenException;
 
 class DataTypeFactory
 {
-    /** @var array<string, DataType> */
+    /** @var array<string, DataTypeCollection> */
     private array $typeCache = [];
 
     public function fromString(string $rawType): DataTypeCollection
     {
-        $types = [];
+        $rawType = \trim($rawType);
 
-        $parts = \explode('|', $rawType);
-        foreach ($parts as $part) {
-            $types[] = $this->singleFromString(\trim($part));
-        }
-
-        return new DataTypeCollection($types);
-    }
-
-    public function singleFromString(string $rawType): DataType
-    {
         if (\array_key_exists($rawType, $this->typeCache)) {
             return $this->typeCache[$rawType];
         }
 
         $tokens = $this->tokenize($rawType);
         if (\count($tokens) === 1) {
-            return $this->typeCache[$rawType] = new DataType($rawType, false);
+            return $this->typeCache[$rawType] = new DataTypeCollection([
+                new DataType($rawType, false),
+            ]);
         }
 
-        return $this->typeCache[$rawType] = $this->parseTokens($tokens);
+        // Parse tokens and make sure nothing is left.
+        $type = $this->parseTokens($tokens);
+        if (! empty($tokens)) {
+            throw new UnexpectedTokenException(\array_shift($tokens));
+        }
+
+        return $this->typeCache[$rawType] = $type;
     }
 
     /**
@@ -46,16 +44,25 @@ class DataTypeFactory
 
         for ($i = 0; $i < \strlen($type); $i++) {
             $char = $type[$i];
+            if ($char === ' ') {
+                continue;
+            }
 
-            if (\in_array($char, ['<', '>', '?', ','])) {
-                if (! empty($token)) {
+            if (\in_array($char, ['<', '>', '?', ',', '|'])) {
+                if (! empty(\trim($token))) {
                     $tokens[] = $token;
                 }
                 $tokens[] = $char;
                 $token = '';
             } else if ($char === '[') {
                 $tokens[] = $token;
-                $token = $char;
+                $token = '';
+                if ($type[++$i] === ']') {
+                    $tokens[] = '[]';
+                    continue;
+                }
+
+                throw new UnexpectedTokenException('[');
             } else {
                 $token .= $char;
             }
@@ -70,58 +77,135 @@ class DataTypeFactory
 
     /**
      * @param array<string> $tokens
+     * @return DataTypeCollection
+     */
+    private function parseTokens(array &$tokens): DataTypeCollection
+    {
+        $types = [];
+
+        $stringStack = '';
+        $nullable = false;
+
+        while ($token = \array_shift($tokens)) {
+            if ($token === '<') {
+                $types[] = $this->makeDataType(
+                    $stringStack,
+                    $nullable,
+                    $this->fetchGenericTypes($tokens),
+                );
+                $stringStack = '';
+                $nullable = false;
+
+                continue;
+            }
+
+            if ($token === '|') {
+                $types[] = $this->makeDataType($stringStack, $nullable);
+                $stringStack = '';
+                $nullable = false;
+
+                continue;
+            }
+
+            if ($token === '?') {
+                $nullable = true;
+                continue;
+            }
+
+            if (\in_array($token, ['>', ','])) {
+                throw new UnexpectedTokenException($token);
+            }
+
+            $stringStack .= $token;
+        }
+
+        if (! empty($stringStack)) {
+            $types[] = $this->makeDataType($stringStack, $nullable);
+        }
+
+        return new DataTypeCollection($types);
+    }
+
+    /**
+     * @param array<string> $tokens
+     * @return array<DataTypeCollection>
+     */
+    private function fetchGenericTypes(array &$tokens): array
+    {
+        $types = [];
+        $collection = [];
+        $stringStack = '';
+        $nullable = false;
+        while ($token = \array_shift($tokens)) {
+            if ($token === '<') {
+                $types[] = $this->makeDataType(
+                    $stringStack,
+                    $nullable,
+                    $this->fetchGenericTypes($tokens),
+                );
+                $stringStack = '';
+                $nullable = false;
+
+                continue;
+            }
+
+            if ($token === ',' || $token === '|') {
+                if (! empty($stringStack)) {
+                    $types[] = $this->makeDataType($stringStack, $nullable);
+                }
+
+                if ($token === ',') {
+                    $collection[] = new DataTypeCollection($types);
+                    $types = [];
+                }
+
+                $stringStack = '';
+                $nullable = false;
+                continue;
+            }
+
+            if ($token === '>') {
+                break;
+            }
+
+            if ($token === '?') {
+                $nullable = true;
+                continue;
+            }
+
+            $stringStack .= $token;
+        }
+
+        if (! empty($stringStack)) {
+            $types[] = $this->makeDataType($stringStack, $nullable);
+        }
+        if (! empty($types)) {
+            $collection[] = new DataTypeCollection($types);
+        }
+
+        return $collection;
+    }
+
+    /**
+     * @param string $type
+     * @param bool $nullable
+     * @param array<DataTypeCollection> $genericTypes
      * @return DataType
      */
-    private function parseTokens(array $tokens): DataType
+    private function makeDataType(string $type, bool $nullable = false, array $genericTypes = []): DataType
     {
-        $isNullable = $tokens[0] === '?';
-        if ($isNullable) {
-            \array_shift($tokens);
+        if (\str_ends_with($type, '[]')) {
+            return new DataType(
+                'array',
+                $nullable,
+                [
+                    new DataTypeCollection([
+                        new DataType(\substr($type, 0, -2), false),
+                    ])
+                ],
+            );
         }
 
-        $type = \array_shift($tokens);
-
-        // If nothing is left, return the type
-        if (empty($tokens)) {
-            return new DataType($type, $isNullable);
-        }
-
-        // If square brackets, it's an array with the type as value
-        $nextToken = \array_shift($tokens);
-        if ($nextToken === '[]') {
-            return new DataType('array', $isNullable, [new DataTypeCollection([new DataType($type, false)])]);
-        }
-
-        // If beaks, find either a value or a key and value
-        if ($nextToken === '<') {
-            $nextGenericType = '';
-            $genericTypes = [];
-            while ($nextToken = \array_shift($tokens)) {
-                if ($nextToken === '>') {
-                    break;
-                }
-
-                if ($nextToken === ',') {
-                    $genericTypes[] = $this->fromString($nextGenericType);
-                    $nextGenericType = '';
-
-                    continue;
-                }
-
-                $nextGenericType .= \trim($nextToken);
-            }
-
-            if (empty($genericTypes) && empty($nextGenericType)) {
-                throw new \Exception('Found generic type without subtype');
-            }
-
-            if (! empty($nextGenericType)) {
-                $genericTypes[] = $this->fromString($nextGenericType);
-            }
-
-            return new DataType($type, $isNullable, $genericTypes);
-        }
-
-        throw new UnexpectedTokenException($nextToken);
+        return new DataType($type, $nullable, $genericTypes);
     }
 }

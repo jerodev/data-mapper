@@ -17,7 +17,7 @@ final class DataTypeFactoryTest extends TestCase
      */
     public function it_should_parse_single_data_types(string $input, DataType $expectation): void
     {
-        $this->assertEquals($expectation, (new DataTypeFactory())->singleFromString($input));
+        $this->assertEquals($expectation, (new DataTypeFactory())->fromString($input)->types[0]);
     }
 
     /**
@@ -28,7 +28,7 @@ final class DataTypeFactoryTest extends TestCase
     {
         $this->expectException(UnexpectedTokenException::class);
 
-        (new DataTypeFactory())->singleFromString($input);
+        (new DataTypeFactory())->fromString($input);
     }
 
     public static function singleDataTypeProvider(): Generator
@@ -66,6 +66,23 @@ final class DataTypeFactoryTest extends TestCase
                 ]),
             ],
         )];
+        yield ['array<string|int, array<K>>', new DataType(
+            'array',
+            false,
+            [
+                new DataTypeCollection([
+                    new DataType('string', false),
+                    new DataType('int', false),
+                ]),
+                new DataTypeCollection([
+                    new DataType('array', false, [
+                        new DataTypeCollection([
+                            new DataType('K', false),
+                        ]),
+                    ]),
+                ]),
+            ],
+        )];
 
         yield ['Generic<K|bool, ?V>', new DataType(
             'Generic',
@@ -98,5 +115,6 @@ final class DataTypeFactoryTest extends TestCase
     public static function unexpectedTokenDataProvider(): Generator
     {
         yield ['String>'];
+        yield ['array[foo]'];
     }
 }

@@ -24,9 +24,12 @@ class DataTypeCollectionTest extends TestCase
     {
         yield ['string', 'string'];
         yield ['string|int', 'string|int'];
+        yield ['string|null|int', 'string|int|null'];   // null is always parsed last
         yield ['string[]', 'array<string>'];
+        yield ['string[][][]', 'array<array<array<string>>>'];
         yield ['array<int, string>', 'array<int, string>'];
         yield ['Generic<?K, V|bool>', 'Generic<?K, V|bool>'];
         yield ['array<string|int, array<K[]>>', 'array<string|int, array<array<K>>>'];
+        yield ['array< int,  array< string | int | null | float     > >', 'array<int, array<string|int|float|null>>'];
     }
 }

@@ -36,10 +36,15 @@ class ObjectMapperTest extends TestCase
         $config->debug = true;
 
         $objectMapper = new ObjectMapper(new Mapper($config));
+        $objectMapper->clearCache();
         $objectMapper->map(new DataType(Mapper::class, false), []);
+
+        $filePattern = $objectMapper->mapperDirectory() . '/*.php';
+        $this->assertCount(1, \glob($filePattern));
+
         unset($objectMapper);
 
-        $this->assertEmpty(\glob($config->classMapperDirectory . '/*.php'));
+        $this->assertEmpty(\glob($filePattern));
     }
 
     /** @test */

@@ -55,7 +55,9 @@ class DataTypeFactory
                 $tokens[] = $char;
                 $token = '';
             } else if ($char === '[') {
-                $tokens[] = $token;
+                if (! empty(\trim($token))) {
+                    $tokens[] = $token;
+                }
                 $token = '';
                 if ($type[++$i] === ']') {
                     $tokens[] = '[]';
@@ -194,16 +196,25 @@ class DataTypeFactory
      */
     private function makeDataType(string $type, bool $nullable = false, array $genericTypes = []): DataType
     {
-        if (\str_ends_with($type, '[]')) {
-            return new DataType(
-                'array',
-                $nullable,
-                [
-                    new DataTypeCollection([
-                        new DataType(\substr($type, 0, -2), false),
-                    ])
-                ],
-            );
+        // Parse a stack of [] arrays
+        $arrayStack = 0;
+        while (\str_ends_with($type, '[]')) {
+            $type = \substr($type, 0, -2);
+            $arrayStack++;
+        }
+        if ($arrayStack > 0) {
+            $type = new DataType($type, false);
+            for ($i = 0; $i < $arrayStack; $i++) {
+                $type = new DataType(
+                    'array',
+                    $arrayStack - $i === 1 ? $nullable : false,
+                    [
+                        new DataTypeCollection([$type]),
+                    ],
+                );
+            }
+
+            return $type;
         }
 
         return new DataType($type, $nullable, $genericTypes);

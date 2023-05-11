@@ -15,4 +15,6 @@ class ClassBluePrint
 
     /** @var array<Attribute> */
     public array $classAttributes = [];
+
+    public bool $mapsItself = false;
 }

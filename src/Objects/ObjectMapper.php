@@ -41,10 +41,15 @@ class ObjectMapper
             }
         }
 
+        $blueprint = $this->classBluePrinter->print($class);
+        if ($blueprint->mapsItself) {
+            return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
+        }
+
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
         if (! \file_exists($fileName)) {
-            \file_put_contents($fileName, $this->createObjectMappingFunction($class, $functionName));
+            \file_put_contents($fileName, $this->createObjectMappingFunction($blueprint, $class, $functionName));
         }
 
         // Include the function containing file and call the function.
@@ -69,10 +74,8 @@ class ObjectMapper
         return $dir;
     }
 
-    private function createObjectMappingFunction(string $class, string $mapFunctionName): string
+    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $class, string $mapFunctionName): string
     {
-        $blueprint = $this->classBluePrinter->print($class);
-
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $argument) {

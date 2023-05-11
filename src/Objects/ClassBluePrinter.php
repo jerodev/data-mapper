@@ -3,6 +3,7 @@
 namespace Jerodev\DataMapper\Objects;
 
 use Jerodev\DataMapper\Attributes\PostMapping;
+use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -24,6 +25,13 @@ class ClassBluePrinter
         $reflection = new ReflectionClass($class);
 
         $blueprint = new ClassBluePrint();
+
+        // If the class maps itself, don't bother mapping anything else.
+        if ($reflection->implementsInterface(MapsItself::class)) {
+            $blueprint->mapsItself = true;
+            return $blueprint;
+        }
+
         $this->printConstructor($reflection, $blueprint);
         $this->printProperties($reflection, $blueprint);
         $this->printAttributes($reflection, $blueprint);

@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper\Tests\Objects;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Objects\ObjectMapper;
+use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Types\DataType;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +13,22 @@ use ValueError;
 
 class ObjectMapperTest extends TestCase
 {
+    /** @test */
+    public function it_should_let_classes_map_themselves(): void
+    {
+        $value = (new ObjectMapper(new Mapper()))->map(
+            new DataType(SelfMapped::class, true),
+            [
+                'data' => [
+                    'John Doe',
+                    'Jane Doe',
+                ],
+            ],
+        );
+
+        $this->assertEquals(['John Doe', 'Jane Doe'], $value->users);
+    }
+
     /** @test */
     public function it_should_not_retain_mapper_files_in_debug_mode(): void
     {

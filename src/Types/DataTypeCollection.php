@@ -35,7 +35,7 @@ class DataTypeCollection
         return ! empty(
             \array_filter(
                 $this->types,
-                static fn (DataType $t) => $t->type === 'null',
+                static fn (DataType $t) => $t->isNullable || $t->type === 'null',
             )
         );
     }

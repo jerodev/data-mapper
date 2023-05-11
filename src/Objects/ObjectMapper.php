@@ -10,6 +10,8 @@ use Jerodev\DataMapper\Types\DataTypeCollection;
 
 class ObjectMapper
 {
+    private const MAPPER_FUNCTION_PREFIX = 'jmapper_';
+
     private readonly ClassBluePrinter $classBluePrinter;
     private readonly ClassResolver $classResolver;
 
@@ -26,23 +28,45 @@ class ObjectMapper
      * @return object
      * @throws CouldNotResolveClassException
      */
-    public function map(DataType $type, array|string $data): object
+    public function map(DataType $type, array|string $data): ?object
     {
         $class = $this->classResolver->resolve($type->type);
 
         // If the data is a string and the class is an enum, create the enum.
         if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
-            return $class::from($data);
+            if ($this->mapper->config->enumTryFrom) {
+                return $class::tryFrom($data);
+            } else {
+                return $class::from($data);
+            }
         }
 
-        $mapFileName = 'mapper_' . \md5($class);
-        if (! \file_exists($mapFileName . '.php')) {
-            \file_put_contents($mapFileName . '.php', $this->createObjectMappingFunction($class, $mapFileName));
+        $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
+        $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
+        if (! \file_exists($fileName)) {
+            \file_put_contents($fileName, $this->createObjectMappingFunction($class, $functionName));
         }
 
         // Include the function containing file and call the function.
-        require_once($mapFileName . '.php');
-        return ($mapFileName)($this->mapper, $data);
+        require_once($fileName);
+        return ($functionName)($this->mapper, $data);
+    }
+
+    public function clearCache(): void
+    {
+        foreach (\glob($this->mapperDirectory() . \DIRECTORY_SEPARATOR . self::MAPPER_FUNCTION_PREFIX . '*.php') as $file) {
+            \unlink($file);
+        }
+    }
+
+    private function mapperDirectory(): string
+    {
+        $dir = \str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory);
+        if (! \file_exists($dir)) {
+            \mkdir($dir, 0777, true);
+        }
+
+        return $dir;
     }
 
     private function createObjectMappingFunction(string $class, string $mapFunctionName): string
@@ -126,7 +150,9 @@ class ObjectMapper
             }
 
             if (\is_subclass_of($type->type, \BackedEnum::class)) {
-                return "{$type->type}::from({$propertyName})";
+                $enumFunction = $this->mapper->config->enumTryFrom ? 'tryFrom' : 'from';
+
+                return "{$type->type}::{$enumFunction}({$propertyName})";
             }
         }
 
@@ -136,5 +162,12 @@ class ObjectMapper
     private function wrapDefault(string $value, string $arrayKey, mixed $defaultValue): string
     {
         return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
+    }
+
+    public function __destruct()
+    {
+        if ($this->mapper->config->debug) {
+            $this->clearCache();
+        }
     }
 }

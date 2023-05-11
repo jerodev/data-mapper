@@ -16,7 +16,7 @@ class DataTypeCollectionTest extends TestCase
     {
         $this->assertEquals(
             $expectation,
-            (new DataTypeFactory())->fromString($input)->__toString()
+            (new DataTypeFactory())->fromString($input)->__toString(),
         );
     }
 

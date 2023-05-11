@@ -67,7 +67,7 @@ class ClassBluePrinter
     {
         $properties = $reflection->getProperties();
         foreach ($properties as $property) {
-            if (! $property->isPublic()) {
+            if (! $property->isPublic() || $property->isReadOnly()) {
                 continue;
             }
 

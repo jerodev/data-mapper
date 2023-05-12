@@ -23,7 +23,7 @@ class ClassBluePrinter
     public function print(string $class): ClassBluePrint
     {
         $reflection = new ReflectionClass($class);
-        $blueprint = new ClassBluePrint($class);
+        $blueprint = new ClassBluePrint($class, $reflection->getFileName());
 
         // If the class maps itself, don't bother mapping anything else.
         if ($reflection->implementsInterface(MapsItself::class)) {

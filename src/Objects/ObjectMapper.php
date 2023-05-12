@@ -7,30 +7,30 @@ use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
+use Jerodev\DataMapper\Types\DataTypeFactory;
 
 class ObjectMapper
 {
     private const MAPPER_FUNCTION_PREFIX = 'jmapper_';
 
     private readonly ClassBluePrinter $classBluePrinter;
-    private readonly ClassResolver $classResolver;
 
     public function __construct(
         private readonly Mapper $mapper,
+        private readonly DataTypeFactory $dataTypeFactory = new DataTypeFactory(),
     ) {
         $this->classBluePrinter = new ClassBluePrinter();
-        $this->classResolver = new ClassResolver();
     }
 
     /**
      * @param DataType $type
      * @param array|string $data
-     * @return object
+     * @return object|null
      * @throws CouldNotResolveClassException
      */
     public function map(DataType $type, array|string $data): ?object
     {
-        $class = $this->classResolver->resolve($type->type);
+        $class = $this->dataTypeFactory->classResolver->resolve($type->type);
 
         // If the data is a string and the class is an enum, create the enum.
         if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
@@ -66,23 +66,25 @@ class ObjectMapper
 
     public function mapperDirectory(): string
     {
-        $dir = \realpath(\str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory));
+        $dir = \str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory);
         if (! \file_exists($dir) && ! \mkdir($dir, 0777, true) && ! \is_dir($dir)) {
             throw new \RuntimeException("Could not create caching directory '{$dir}'");
         }
 
-        return $dir;
+        return \rtrim($dir, \DIRECTORY_SEPARATOR);
     }
 
     private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName): string
     {
+        $tab = '    ';
+
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $argument) {
             $arg = "\$data['{$argument['name']}']";
 
             if ($argument['type'] !== null) {
-                $arg = $this->castInMapperFunction($arg, $argument['type']);
+                $arg = $this->castInMapperFunction($arg, $argument['type'], $blueprint);
                 if (\array_key_exists('default', $argument)) {
                     $arg = $this->wrapDefault($arg, $argument['name'], $argument['default']);
                 }
@@ -94,21 +96,21 @@ class ObjectMapper
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
-            $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type']);
+            $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type'], $blueprint);
             if (\array_key_exists('default', $property)) {
                 $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
             }
 
-            $content.= \PHP_EOL . '    $x->' . $name . ' = ' . $propertyMap . ';';
+            $content.= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
         }
 
         // Post mapping functions?
         foreach ($blueprint->classAttributes as $attribute) {
             if ($attribute instanceof PostMapping) {
                 if (\is_string($attribute->postMappingCallback)) {
-                    $content.= \PHP_EOL . \PHP_EOL . "    \$x->{$attribute->postMappingCallback}(\$data, \$x);";
+                    $content.= \PHP_EOL . \PHP_EOL . $tab . $tab . "\$x->{$attribute->postMappingCallback}(\$data, \$x);";
                 } else {
-                    $content.= \PHP_EOL . \PHP_EOL . "    \call_user_func({$attribute->postMappingCallback}, \$data, \$x);";
+                    $content.= \PHP_EOL . \PHP_EOL . $tab . $tab . "\call_user_func({$attribute->postMappingCallback}, \$data, \$x);";
                 }
             }
         }
@@ -117,16 +119,19 @@ class ObjectMapper
         $mapperClass = Mapper::class;
         return <<<PHP
         <?php
-        function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
-        {
-            {$content}
 
-            return \$x;
+        if (! \\function_exists('{$mapFunctionName}')) {
+            function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
+            {
+                {$content}
+
+                return \$x;
+            }
         }
         PHP;
     }
 
-    private function castInMapperFunction(string $propertyName, DataTypeCollection $type): string
+    private function castInMapperFunction(string $propertyName, DataTypeCollection $type, ClassBluePrint $bluePrint): string
     {
         if (\count($type->types) === 1) {
             $type = $type->types[0];
@@ -148,7 +153,7 @@ class ObjectMapper
                 }
                 if (\count($type->genericTypes) === 1) {
                     $uniqid = \uniqid();
-                    return "\\array_map(static fn (\$x{$uniqid}) => " . $this->castInMapperFunction('$x' . $uniqid, $type->genericTypes[0]) . ", {$propertyName})";
+                    return "\\array_map(static fn (\$x{$uniqid}) => " . $this->castInMapperFunction('$x' . $uniqid, $type->genericTypes[0], $bluePrint) . ", {$propertyName})";
                 }
             }
 
@@ -159,7 +164,7 @@ class ObjectMapper
             }
         }
 
-        return '$mapper->map(\'' . $type->__toString() . '\', ' . $propertyName . ')';
+        return '$mapper->map(\'' . $this->dataTypeFactory->print($type, $bluePrint->fileName) . '\', ' . $propertyName . ')';
     }
 
     private function wrapDefault(string $value, string $arrayKey, mixed $defaultValue): string

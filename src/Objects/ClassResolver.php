@@ -6,14 +6,14 @@ use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 
 class ClassResolver
 {
-    public function resolve(string $name): string
+    public function resolve(string $name, ?string $sourceFile = null): string
     {
         if (\class_exists($name)) {
             return $name;
         }
 
         // Find the file where this class is mentioned
-        $sourceFile = $this->findSourceFile();
+        $sourceFile ??= $this->findSourceFile();
         if ($sourceFile === null) {
             throw new CouldNotResolveClassException($name);
         }

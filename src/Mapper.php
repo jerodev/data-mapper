@@ -19,9 +19,13 @@ class Mapper
     public function __construct(
         ?MapperConfig $config = null,
     ) {
-        $this->dataTypeFactory = new DataTypeFactory();
-        $this->objectMapper = new ObjectMapper($this);
         $this->config = $config ?? new MapperConfig();
+
+        $this->dataTypeFactory = new DataTypeFactory();
+        $this->objectMapper = new ObjectMapper(
+            $this,
+            $this->dataTypeFactory,
+        );
     }
 
     /**
@@ -121,7 +125,8 @@ class Mapper
     {
         try {
             return $this->objectMapper->map($type, $data);
-        } catch (CouldNotResolveClassException) {
+        } catch (CouldNotResolveClassException $e) {
+            throw $e;
             throw new CouldNotMapValueException($data, $type);
         }
     }

@@ -20,6 +20,7 @@ class ClassBluePrint
 
     public function __construct(
         public readonly string $namespacedClassName,
+        public readonly string $fileName,
     ) {
     }
 }

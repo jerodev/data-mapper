@@ -30,7 +30,7 @@ final class MapperTest extends TestCase
     public function it_should_map_objects(string $type, mixed $value, mixed $expectation): void
     {
         $config = new MapperConfig();
-        $config->classMapperDirectory = '';
+        $config->classMapperDirectory = __DIR__ . '/..';
 
         $this->assertEquals($expectation, (new Mapper($config))->map($type, $value));
     }

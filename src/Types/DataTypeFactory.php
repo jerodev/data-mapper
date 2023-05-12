@@ -3,11 +3,17 @@
 namespace Jerodev\DataMapper\Types;
 
 use Jerodev\DataMapper\Exceptions\UnexpectedTokenException;
+use Jerodev\DataMapper\Objects\ClassResolver;
 
 class DataTypeFactory
 {
     /** @var array<string, DataTypeCollection> */
     private array $typeCache = [];
+
+    public function __construct(
+        public readonly ClassResolver $classResolver = new ClassResolver(),
+    ) {
+    }
 
     public function fromString(string $rawType, bool $forceNullable = false): DataTypeCollection
     {
@@ -31,6 +37,36 @@ class DataTypeFactory
         }
 
         return $this->typeCache[$rawType] = $type;
+    }
+
+    /**
+     * Prints a type with resolved class names, if possible.
+     *
+     * @param DataTypeCollection|DataType $type
+     * @return string
+     */
+    public function print(DataTypeCollection|DataType $type, ?string $sourceFile = null): string
+    {
+        if ($type instanceof DataType) {
+            $type = new DataTypeCollection([$type]);
+        }
+        \assert($type instanceof DataTypeCollection);
+
+        $types = [];
+        foreach ($type->types as $t) {
+            $typeString = $t->isNative() || $t->isArray() ? $t->type : $this->classResolver->resolve($t->type, $sourceFile);
+            if (\count($t->genericTypes) > 0) {
+                $typeString .= '<' . \implode(', ', \array_map(fn (DataTypeCollection $c) => $this->print($c, $sourceFile), $t->genericTypes)) . '>';
+            }
+
+            if ($t->isNullable) {
+                $typeString = '?' . $typeString;
+            }
+
+            $types[] = $typeString;
+        }
+
+        return \implode('|', $types);
     }
 
     /**

@@ -43,6 +43,7 @@ class DataTypeFactory
      * Prints a type with resolved class names, if possible.
      *
      * @param DataTypeCollection|DataType $type
+     * @param string|null $sourceFile
      * @return string
      */
     public function print(DataTypeCollection|DataType $type, ?string $sourceFile = null): string
@@ -54,8 +55,9 @@ class DataTypeFactory
 
         $types = [];
         foreach ($type->types as $t) {
-            // Attempt to find the class name in the source file
             $typeString = $t->type;
+
+            // Attempt to resolve the class name
             try {
                 $typeString = $t->isNative() || $t->isArray()
                     ? $typeString
@@ -63,8 +65,15 @@ class DataTypeFactory
             } catch (\Throwable) {
             }
 
+            // Add generic types between < >
             if (\count($t->genericTypes) > 0) {
-                $typeString .= '<' . \implode(', ', \array_map(fn (DataTypeCollection $c) => $this->print($c, $sourceFile), $t->genericTypes)) . '>';
+                $typeString .= '<' . \implode(
+                    ', ',
+                    \array_map(
+                        fn (DataTypeCollection $c) => $this->print($c, $sourceFile),
+                        $t->genericTypes,
+                    ),
+                ) . '>';
             }
 
             if ($t->isNullable) {

@@ -1,4 +1,4 @@
 .idea/
 vendor/
+jmapper_*
 .phpunit.result.cache
-.jmapper_*

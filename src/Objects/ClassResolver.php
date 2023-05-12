@@ -57,7 +57,8 @@ class ClassResolver
         $lastPart = \end($nameParts);
 
         $newline = false;
-        for ($i = 0; $i < \strlen($file); $i++) {
+        $fileLength = \strlen($file);
+        for ($i = 0; $i < $fileLength; $i++) {
             $char = $file[$i];
 
             // Don't care about spaces

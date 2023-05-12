@@ -7,6 +7,8 @@ use Jerodev\DataMapper\Types\DataTypeCollection;
 
 class ClassBluePrint
 {
+    public bool $mapsItself = false;
+
     /** @var array<array{name: string, type: DataTypeCollection, default?: mixed}> */
     public array $constructorArguments = [];
 
@@ -16,5 +18,8 @@ class ClassBluePrint
     /** @var array<Attribute> */
     public array $classAttributes = [];
 
-    public bool $mapsItself = false;
+    public function __construct(
+        public readonly string $namespacedClassName,
+    ) {
+    }
 }

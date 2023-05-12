@@ -49,7 +49,7 @@ class ObjectMapper
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
         if (! \file_exists($fileName)) {
-            \file_put_contents($fileName, $this->createObjectMappingFunction($blueprint, $class, $functionName));
+            \file_put_contents($fileName, $this->createObjectMappingFunction($blueprint, $functionName));
         }
 
         // Include the function containing file and call the function.
@@ -66,15 +66,15 @@ class ObjectMapper
 
     public function mapperDirectory(): string
     {
-        $dir = \str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory);
-        if (! \file_exists($dir)) {
-            \mkdir($dir, 0777, true);
+        $dir = \realpath(\str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory));
+        if (! \file_exists($dir) && ! \mkdir($dir, 0777, true) && ! \is_dir($dir)) {
+            throw new \RuntimeException("Could not create caching directory '{$dir}'");
         }
 
         return $dir;
     }
 
-    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $class, string $mapFunctionName): string
+    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName): string
     {
         // Instantiate a new object
         $args = [];
@@ -90,7 +90,7 @@ class ObjectMapper
 
             $args[] = $arg;
         }
-        $content = '$x = new ' . $class . '(' . \implode(', ', $args) . ');';
+        $content = '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {

@@ -8,7 +8,8 @@ class DocBlockParser
     {
         $docblock = new DocBlock();
 
-        for ($i = 0; $i < \strlen($contents); $i++) {
+        $contentLength = \strlen($contents);
+        for ($i = 0; $i < $contentLength; $i++) {
             $char = $contents[$i];
 
             if ($char === '@') {

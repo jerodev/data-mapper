@@ -90,10 +90,14 @@ class DataTypeFactory
 
         while ($token = \array_shift($tokens)) {
             if ($token === '<') {
+                $genericTypes = $this->fetchGenericTypes($tokens);
+                while (($tokens[0] ?? '') === '[]') {
+                    $stringStack .= \array_shift($tokens);
+                }
                 $types[] = $this->makeDataType(
                     $stringStack,
                     $nullable,
-                    $this->fetchGenericTypes($tokens),
+                    $genericTypes,
                 );
                 $stringStack = '';
                 $nullable = false;
@@ -203,7 +207,7 @@ class DataTypeFactory
             $arrayStack++;
         }
         if ($arrayStack > 0) {
-            $type = new DataType($type, false);
+            $type = new DataType($type, false, $genericTypes);
             for ($i = 0; $i < $arrayStack; $i++) {
                 $type = new DataType(
                     'array',

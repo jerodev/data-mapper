@@ -6,7 +6,7 @@ use Generator;
 use Jerodev\DataMapper\Types\DataTypeFactory;
 use PHPUnit\Framework\TestCase;
 
-class DataTypeCollectionTest extends TestCase
+final class DataTypeCollectionTest extends TestCase
 {
     /**
      * @test
@@ -27,6 +27,7 @@ class DataTypeCollectionTest extends TestCase
         yield ['string|null|int', 'string|int|null'];   // null is always parsed last
         yield ['string[]', 'array<string>'];
         yield ['string[][][]', 'array<array<array<string>>>'];
+        yield ['array<int[][]>[][]', 'array<array<array<array<array<int>>>>>'];
         yield ['array<int, string>', 'array<int, string>'];
         yield ['Generic<?K, V|bool>', 'Generic<?K, V|bool>'];
         yield ['array<string|int, array<K[]>>', 'array<string|int, array<array<K>>>'];

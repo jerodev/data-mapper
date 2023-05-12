@@ -62,6 +62,7 @@ final class MapperTest extends TestCase
         yield ['int', 8.3, 8];
         yield ['int[]', [5, 8], [5, 8]];
         yield ['int[][][][][]', [[[[['5']]]]], [[[[[5]]]]]];
+        yield ['array<int[][]>[][]', [[[[['0']]]]], [[[[[0]]]]]];
 
         yield ['string', 4, '4'];
         yield ['array<string>', [4, 5], ['4', '5']];

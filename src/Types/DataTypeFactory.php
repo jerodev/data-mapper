@@ -54,7 +54,15 @@ class DataTypeFactory
 
         $types = [];
         foreach ($type->types as $t) {
-            $typeString = $t->isNative() || $t->isArray() ? $t->type : $this->classResolver->resolve($t->type, $sourceFile);
+            // Attempt to find the class name in the source file
+            $typeString = $t->type;
+            try {
+                $typeString = $t->isNative() || $t->isArray()
+                    ? $typeString
+                    : $this->classResolver->resolve($t->type, $sourceFile);
+            } catch (\Throwable) {
+            }
+
             if (\count($t->genericTypes) > 0) {
                 $typeString .= '<' . \implode(', ', \array_map(fn (DataTypeCollection $c) => $this->print($c, $sourceFile), $t->genericTypes)) . '>';
             }

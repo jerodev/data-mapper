@@ -39,12 +39,4 @@ class DataTypeCollection
             )
         );
     }
-
-    public function __toString(): string
-    {
-        return \implode(
-            '|',
-            \array_map(static fn (DataType $type) => $type->__toString(), $this->types),
-        );
-    }
 }

@@ -49,7 +49,7 @@ class Mapper
                 return null;
             }
 
-            throw new UnexpectedNullValueException($typeCollection->__toString());
+            throw new UnexpectedNullValueException($this->dataTypeFactory->print($typeCollection));
         }
 
         // Loop over all possible types and parse to the first one that matches

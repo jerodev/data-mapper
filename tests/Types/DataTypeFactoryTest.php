@@ -31,6 +31,20 @@ final class DataTypeFactoryTest extends TestCase
         (new DataTypeFactory())->fromString($input);
     }
 
+    /**
+     * @test
+     * @dataProvider typeToStringDataProvider
+     */
+    public function it_should_parse_and_convert_back_to_string(string $input, string $expectation): void
+    {
+        $factory = new DataTypeFactory();
+
+        $this->assertEquals(
+            $expectation,
+            $factory->print($factory->fromString($input)),
+        );
+    }
+
     public static function singleDataTypeProvider(): Generator
     {
         yield ['int', new DataType('int', false)];
@@ -116,5 +130,19 @@ final class DataTypeFactoryTest extends TestCase
     {
         yield ['String>'];
         yield ['array[foo]'];
+    }
+
+    public static function typeToStringDataProvider(): Generator
+    {
+        yield ['string', 'string'];
+        yield ['string|int', 'string|int'];
+        yield ['string|null|int', 'string|int|null'];   // null is always parsed last
+        yield ['string[]', 'array<string>'];
+        yield ['string[][][]', 'array<array<array<string>>>'];
+        yield ['array<int[][]>[][]', 'array<array<array<array<array<int>>>>>'];
+        yield ['array<int, string>', 'array<int, string>'];
+        yield ['Generic<?K, V|bool>', 'Generic<?K, V|bool>'];
+        yield ['array<string|int, array<K[]>>', 'array<string|int, array<array<K>>>'];
+        yield ['array< int,  array< string | int | null | float     > >', 'array<int, array<string|int|float|null>>'];
     }
 }

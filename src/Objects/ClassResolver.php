@@ -6,14 +6,14 @@ use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 
 class ClassResolver
 {
-    public function resolve(string $name): string
+    public function resolve(string $name, ?string $sourceFile = null): string
     {
         if (\class_exists($name)) {
             return $name;
         }
 
         // Find the file where this class is mentioned
-        $sourceFile = $this->findSourceFile();
+        $sourceFile ??= $this->findSourceFile();
         if ($sourceFile === null) {
             throw new CouldNotResolveClassException($name);
         }
@@ -57,7 +57,8 @@ class ClassResolver
         $lastPart = \end($nameParts);
 
         $newline = false;
-        for ($i = 0; $i < \strlen($file); $i++) {
+        $fileLength = \strlen($file);
+        for ($i = 0; $i < $fileLength; $i++) {
             $char = $file[$i];
 
             // Don't care about spaces

@@ -6,6 +6,7 @@ use Generator;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
+use Jerodev\DataMapper\Tests\_Mocks\Aliases;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
@@ -28,7 +29,10 @@ final class MapperTest extends TestCase
      */
     public function it_should_map_objects(string $type, mixed $value, mixed $expectation): void
     {
-        $this->assertEquals($expectation, (new Mapper())->map($type, $value));
+        $config = new MapperConfig();
+        $config->classMapperDirectory = __DIR__ . '/..';
+
+        $this->assertEquals($expectation, (new Mapper($config))->map($type, $value));
     }
 
     /** @test */
@@ -116,6 +120,26 @@ final class MapperTest extends TestCase
                     [
                         'myself',
                         'I',
+                    ],
+                ],
+            ],
+            $dto,
+        ];
+
+        $dto = new Aliases();
+        $dto->userAliases = [
+            'Jerodev' => new UserDto('Jeroen'),
+            'Foo' => new UserDto('Bar'),
+        ];
+        yield [
+            Aliases::class,
+            [
+                'userAliases' => [
+                    'Jerodev' => [
+                        'name' => 'Jeroen',
+                    ],
+                    'Foo' => [
+                        'name' => 'Bar',
                     ],
                 ],
             ],

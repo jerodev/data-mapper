@@ -125,8 +125,7 @@ class Mapper
     {
         try {
             return $this->objectMapper->map($type, $data);
-        } catch (CouldNotResolveClassException $e) {
-            throw $e;
+        } catch (CouldNotResolveClassException) {
             throw new CouldNotMapValueException($data, $type);
         }
     }

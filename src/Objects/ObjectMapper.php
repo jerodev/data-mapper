@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper\Objects;
 use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -31,20 +32,20 @@ class ObjectMapper
     public function map(DataType $type, array|string $data): ?object
     {
         $class = $this->dataTypeFactory->classResolver->resolve($type->type);
+        if (\is_subclass_of($class, MapsItself::class)) {
+            return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
+        }
 
         // If the data is a string and the class is an enum, create the enum.
         if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
             if ($this->mapper->config->enumTryFrom) {
                 return $class::tryFrom($data);
-            } else {
-                return $class::from($data);
             }
+
+            return $class::from($data);
         }
 
         $blueprint = $this->classBluePrinter->print($class);
-        if ($blueprint->mapsItself) {
-            return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
-        }
 
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';

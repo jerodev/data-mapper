@@ -8,4 +8,6 @@ class Aliases
 {
     /** @var array<string, GebruikerObject> */
     public array $userAliases;
+
+    public SelfMapped $sm;
 }

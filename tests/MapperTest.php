@@ -131,6 +131,8 @@ final class MapperTest extends TestCase
             'Jerodev' => new UserDto('Jeroen'),
             'Foo' => new UserDto('Bar'),
         ];
+        $dto->sm = new SelfMapped();
+        $dto->sm->users = ['q'];
         yield [
             Aliases::class,
             [
@@ -141,6 +143,9 @@ final class MapperTest extends TestCase
                     'Foo' => [
                         'name' => 'Bar',
                     ],
+                ],
+                'sm' => [
+                    'data' => ['q'],
                 ],
             ],
             $dto,

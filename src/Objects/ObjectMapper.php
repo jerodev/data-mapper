@@ -163,6 +163,10 @@ class ObjectMapper
 
                 return "{$type->type}::{$enumFunction}({$propertyName})";
             }
+
+            if (\is_subclass_of($type->type, MapsItself::class)) {
+                return "{$type->type}::mapSelf({$propertyName}, \$mapper)";
+            }
         }
 
         return '$mapper->map(\'' . $this->dataTypeFactory->print($type, $bluePrint->fileName) . '\', ' . $propertyName . ')';

@@ -6,6 +6,7 @@ use Generator;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
+use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
@@ -60,6 +61,8 @@ final class MapperTest extends TestCase
         yield ['int', '8', 8];
         yield ['int', 8.3, 8];
         yield ['int[]', [5, 8], [5, 8]];
+        yield ['int[][][][][]', [[[[['5']]]]], [[[[[5]]]]]];
+        yield ['array<int[][]>[][]', [[[[['0']]]]], [[[[[0]]]]]];
 
         yield ['string', 4, '4'];
         yield ['array<string>', [4, 5], ['4', '5']];
@@ -69,6 +72,7 @@ final class MapperTest extends TestCase
 
     public static function objectValuesDataProvider(): Generator
     {
+        yield ['object[]', [['a' => 'b'], ['c' => 'd']], [(object)['a' => 'b'], (object)['c' => 'd']]];
         yield ['Mapper', [], new Mapper()];
 
         $dto = new UserDto('Jeroen');
@@ -98,6 +102,22 @@ final class MapperTest extends TestCase
             [
                 'name' => 'superman',
                 'canFly' => true,
+            ],
+            $dto,
+        ];
+
+        $dto = new SelfMapped();
+        $dto->users = ['me', ['myself', 'I']];
+        yield [
+            SelfMapped::class,
+            [
+                'data' => [
+                    'me',
+                    [
+                        'myself',
+                        'I',
+                    ],
+                ],
             ],
             $dto,
         ];

@@ -64,7 +64,7 @@ class ObjectMapper
         }
     }
 
-    private function mapperDirectory(): string
+    public function mapperDirectory(): string
     {
         $dir = \str_replace('{$TMP}', \sys_get_temp_dir(), $this->mapper->config->classMapperDirectory);
         if (! \file_exists($dir)) {

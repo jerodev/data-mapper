@@ -8,6 +8,7 @@ This package will map any raw data into a strong typed PHP object.
 - [Basic mapping](#basic-mapping)
   - [Typing properties](#typing-properties)
   - [Custom mapping](#custom-mapping)
+- [Configuration](#configuration)
 
 ## Basic mapping
 Let's start with the basics. The mapper will map data directly to public properties on objects. If these properties have
@@ -50,9 +51,11 @@ First the native type of the property is checked, if this is defined and can be 
 If no type is provided or the type is a generic array, the mapper will check the PHPDoc for type of the property.
 
 When a property is typed using a [union type](https://wiki.php.net/rfc/union_types_v2), the mapper will try to map any
-of the provided types from first to last until one mapping succeeds. The only exception is that `null` is always tried last.
+of the provided types from first to last until one mapping succeeds. The only exception is that `null` is always tried
+last.
 
-If no valid type was found for a property, the provided data will be set to the property directly without any conversion.
+If no valid type was found for a property, the provided data will be set to the property directly without any
+conversion.
 
 ## Custom mapping
 Sometimes, classes have a constructor that cannot be mapped automatically. For these cases there is a
@@ -60,3 +63,15 @@ Sometimes, classes have a constructor that cannot be mapped automatically. For t
 static function: `mapObject`.
 When the mapper comes across a class that implements this interface, instead of using the constructor, the mapper will
 call the `MapsItself` with the provided data and is expected to return an instance of the current class.
+
+## Configuration
+The mapper comes with a few configuration options that can be set using the [`MapperConfig`](https://github.com/jerodev/data-mapper/blob/master/src/MapperConfig.php)
+object and passed to the mappers' constructor. This is not required, if no configuration is passed, the default config
+is used.
+
+| Option                 | Type     | Default        | Description                                                                                                                                                                |
+|------------------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `classMapperDirectory` | `string` | `/tmp/mappers` | This is the location the mapper will create cached mapper functions for objects.<br />The default location is a mappers function in the operating system temporary folder. |
+| `debug`                | `bool`   | `false`        | Enabling debug will clear all cached mapper functions after mapping has completed.                                                                                         |
+| `enumTryFrom`          | `bool`   | `false`        | Enabling this will use the `::tryFrom()` method instead of `::from()` to parse strings to enums.                                                                           |
+| `strictNullMapping`    | `bool`   | `true`         | If enabled, the mapper will throw an error when a `null` value is passed for a property that was not typed as nullable.                                                    |

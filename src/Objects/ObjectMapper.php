@@ -99,19 +99,7 @@ class ObjectMapper
         foreach ($blueprint->properties as $name => $property) {
             // Use a foreach to map key/value arrays
             if (\count($property['type']->types) === 1 && $property['type']->types[0]->isArray() && \count($property['type']->types[0]->genericTypes) === 2) {
-                if (\array_key_exists('default', $property)) {
-                    $content .= \PHP_EOL . $tab . $tab . 'if (\\array_key_exists(\'' . $name . '\', $data) && $data[\'' . $name . '\'] !== null) {';
-                }
-                $content .= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = [];';
-                $content .= \PHP_EOL . $tab . $tab . 'foreach ($data[\'' . $name . '\'] as $key => $value) {';
-                $content .= \PHP_EOL . $tab . $tab . $tab . '$x->' . $name . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
-                $content .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
-                $content .= \PHP_EOL . $tab . $tab . '}';
-                if (\array_key_exists('default', $property)) {
-                    $content .= \PHP_EOL . $tab . $tab . '} else {';
-                    $content .= \PHP_EOL . $tab . $tab . $tab . '$x->' . $name . ' = ' . \var_export($property['default'], true) . ';';
-                    $content .= \PHP_EOL . $tab . $tab . '}';
-                }
+                $content .= $this->buildPropertyForeachMapping($name, $property, $blueprint);
 
                 continue;
             }
@@ -201,5 +189,26 @@ class ObjectMapper
         if ($this->mapper->config->debug) {
             $this->clearCache();
         }
+    }
+
+    /** @param array{type: DataTypeCollection, default?: mixed} $property */
+    private function buildPropertyForeachMapping(string $propertyName, array $property, ClassBluePrint $blueprint): string
+    {
+        $canHaveDefault = \array_key_exists('default', $property);
+
+        $foreach  = \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '$x->' . $propertyName . ' = [];';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . 'foreach ($data[\'' . $propertyName . '\'] as $key => $value) {';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 4 : 3) . '$x->' . $propertyName . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
+        $foreach .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '}';
+
+        if ($canHaveDefault) {
+            $foreach  = \PHP_EOL . \str_repeat('    ', 2) . 'if (\\array_key_exists(\'' . $propertyName . '\', $data)) {' . $foreach;
+            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '} else {';
+            $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . ' = ' . \var_export($property['default'], true) . ';';
+            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
+        }
+
+        return $foreach;
     }
 }

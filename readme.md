@@ -1,8 +1,6 @@
 # Data Mapper
 ![run-tests](https://github.com/jerodev/data-mapper/workflows/run-tests/badge.svg)
 
-> :warning: While the package currently works, it's still a work in progress, and things might break in future releases.
-
 This package will map any raw data into a strong typed PHP object.
 
 - [Installation](#installation)

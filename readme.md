@@ -105,9 +105,6 @@ to the mapper, to reach the best performance.
 
 As an example, this is one of the testing classes of this library and its generated mapper function:
 
-<table>
-<tr>
-<td>
 ```php
 #[PostMapping('post')]
 class UserDto
@@ -130,10 +127,10 @@ class UserDto
     }
 }
 ```
-</td>
-<td>
+
 ```php
-function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $mapper, array $data) {
+function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $mapper, array $data)
+{
     $x = new Jerodev\DataMapper\Tests\_Mocks\UserDto((string) $data['name']);
     $x->name = (string) $data['name'];
     $x->friends = (\array_key_exists('friends', $data) ? \array_map(static fn ($x6462755ab00b1) => $mapper->map('Jerodev\DataMapper\Tests\_Mocks\UserDto', $x6462755ab00b1), $data['friends']) : []);
@@ -144,7 +141,3 @@ function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $map
     return $x;
 }
 ```
-</td>
-</tr>
-</table>
-

@@ -5,10 +5,19 @@
 
 This package will map any raw data into a strong typed PHP object.
 
+- [Installation](#installation)
 - [Basic mapping](#basic-mapping)
   - [Typing properties](#typing-properties)
   - [Custom mapping](#custom-mapping)
 - [Configuration](#configuration)
+- [Under the hood](#under-the-hood)
+
+## Installation
+The mapper has no external dependencies apart from PHP8.1 or higher. It can be installed using composer:
+
+```bash
+composer require jerodev/data-mapper
+```
 
 ## Basic mapping
 Let's start with the basics. The mapper will map data directly to public properties on objects. If these properties have
@@ -75,3 +84,62 @@ is used.
 | `debug`                | `bool`   | `false`        | Enabling debug will clear all cached mapper functions after mapping has completed.                                                                                         |
 | `enumTryFrom`          | `bool`   | `false`        | Enabling this will use the `::tryFrom()` method instead of `::from()` to parse strings to enums.                                                                           |
 | `strictNullMapping`    | `bool`   | `true`         | If enabled, the mapper will throw an error when a `null` value is passed for a property that was not typed as nullable.                                                    |
+
+## Under the hood
+For simple native types, the mapper will use casting to convert the data to the correct type.
+
+When requesting an array type, the mapper will call itself with the type of the array elements for each of the elements in the
+array.
+
+For object types, some magic happens. On the very first run for a certain class, the mapper will use reflection to
+gather information about the class and build a mapper function based on the properties of the class.
+The function will also take into account required and optional properties that are passed to the constructor.
+
+The goal is to have as much and as simple mapping as possible in these generated functions without having to go back
+to the mapper, to reach the best performance.
+
+As an example, this is one of the testing classes of this library and its generated mapper function:
+
+<table>
+<tr>
+<td>
+```php
+#[PostMapping('post')]
+class UserDto
+{
+    /** First name and last name */
+    public string $name;
+
+    /** @var array<self> */
+    public array $friends = [];
+    public ?SuitEnum $favoriteSuit = null;
+
+    public function __construct(string $name)
+    {
+        $this->name = $name;
+    }
+
+    public function post(): void
+    {
+        $this->name = \ucfirst($this->name);
+    }
+}
+```
+</td>
+<td>
+```php
+function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $mapper, array $data) {
+    $x = new Jerodev\DataMapper\Tests\_Mocks\UserDto((string) $data['name']);
+    $x->name = (string) $data['name'];
+    $x->friends = (\array_key_exists('friends', $data) ? \array_map(static fn ($x6462755ab00b1) => $mapper->map('Jerodev\DataMapper\Tests\_Mocks\UserDto', $x6462755ab00b1), $data['friends']) : []);
+    $x->favoriteSuit = (\array_key_exists('favoriteSuit', $data) ? Jerodev\DataMapper\Tests\_Mocks\SuitEnum::from($data['favoriteSuit']) : NULL);
+
+    $x->post($data, $x);
+
+    return $x;
+}
+```
+</td>
+</tr>
+</table>
+

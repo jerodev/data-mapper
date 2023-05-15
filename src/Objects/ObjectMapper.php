@@ -129,8 +129,7 @@ class ObjectMapper
         <?php
 
         if (! \\function_exists('{$mapFunctionName}')) {
-            function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
-            {
+            function {$mapFunctionName}({$mapperClass} \$mapper, array \$data) {
                 {$content}
 
                 return \$x;

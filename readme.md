@@ -9,6 +9,7 @@ This package will map any raw data into a strong typed PHP object.
 - [Basic mapping](#basic-mapping)
   - [Typing properties](#typing-properties)
   - [Custom mapping](#custom-mapping)
+  - [Post mapping](#post-mapping)
 - [Configuration](#configuration)
 - [Under the hood](#under-the-hood)
 
@@ -66,12 +67,18 @@ last.
 If no valid type was found for a property, the provided data will be set to the property directly without any
 conversion.
 
-## Custom mapping
+### Custom mapping
 Sometimes, classes have a constructor that cannot be mapped automatically. For these cases there is a
 [`MapsItself`](https://github.com/jerodev/data-mapper/blob/master/src/MapsItself.php) interface that defines one
 static function: `mapObject`.
 When the mapper comes across a class that implements this interface, instead of using the constructor, the mapper will
 call the `MapsItself` with the provided data and is expected to return an instance of the current class.
+
+### Post mapping
+The mapper also comes with a post mapping attribute. When adding the [`#[PostMapping]` attribute](https://github.com/jerodev/data-mapper/blob/master/src/Attributes/PostMapping.php)
+to a class with a string parameter, this function will be called directly after mapping the object.
+
+A class can have multiple of these attributes and the attributes will be called in the same order as they are defined.
 
 ## Configuration
 The mapper comes with a few configuration options that can be set using the [`MapperConfig`](https://github.com/jerodev/data-mapper/blob/master/src/MapperConfig.php)

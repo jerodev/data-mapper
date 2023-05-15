@@ -9,5 +9,10 @@ class Aliases
     /** @var array<string, GebruikerObject> */
     public array $userAliases;
 
+    /** @var array<string, int> */
+    public array $defaultUsers = [
+        'foo' => 5,
+    ];
+
     public SelfMapped $sm;
 }

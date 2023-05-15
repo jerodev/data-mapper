@@ -97,12 +97,31 @@ class ObjectMapper
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
+            // Use a foreach to map key/value arrays
+            if (\count($property['type']->types) === 1 && $property['type']->types[0]->isArray() && \count($property['type']->types[0]->genericTypes) === 2) {
+                if (\array_key_exists('default', $property)) {
+                    $content .= \PHP_EOL . $tab . $tab . 'if (\\array_key_exists(\'' . $name . '\', $data) && $data[\'' . $name . '\'] !== null) {';
+                }
+                $content .= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = [];';
+                $content .= \PHP_EOL . $tab . $tab . 'foreach ($data[\'' . $name . '\'] as $key => $value) {';
+                $content .= \PHP_EOL . $tab . $tab . $tab . '$x->' . $name . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
+                $content .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
+                $content .= \PHP_EOL . $tab . $tab . '}';
+                if (\array_key_exists('default', $property)) {
+                    $content .= \PHP_EOL . $tab . $tab . '} else {';
+                    $content .= \PHP_EOL . $tab . $tab . $tab . '$x->' . $name . ' = ' . \var_export($property['default'], true) . ';';
+                    $content .= \PHP_EOL . $tab . $tab . '}';
+                }
+
+                continue;
+            }
+
             $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type'], $blueprint);
             if (\array_key_exists('default', $property)) {
                 $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
             }
 
-            $content.= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
+            $content .= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
         }
 
         // Post mapping functions?

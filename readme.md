@@ -101,7 +101,7 @@ gather information about the class and build a mapper function based on the prop
 The function will also take into account required and optional properties that are passed to the constructor.
 
 The goal is to have as much and as simple mapping as possible in these generated functions without having to go back
-to the mapper, to reach the best performance.
+to the mapper, to reach the best performance. For more information refer to the [class mapper function docs](./doc/class-mapper-function.md).
 
 As an example, this is one of the testing classes of this library and its generated mapper function:
 

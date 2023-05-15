@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper\Objects;
 use Jerodev\DataMapper\Attributes\PostMapping;
 use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Mapper;
+use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
@@ -31,20 +32,20 @@ class ObjectMapper
     public function map(DataType $type, array|string $data): ?object
     {
         $class = $this->dataTypeFactory->classResolver->resolve($type->type);
+        if (\is_subclass_of($class, MapsItself::class)) {
+            return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
+        }
 
         // If the data is a string and the class is an enum, create the enum.
         if (\is_string($data) && \is_subclass_of($class, \BackedEnum::class)) {
             if ($this->mapper->config->enumTryFrom) {
                 return $class::tryFrom($data);
-            } else {
-                return $class::from($data);
             }
+
+            return $class::from($data);
         }
 
         $blueprint = $this->classBluePrinter->print($class);
-        if ($blueprint->mapsItself) {
-            return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
-        }
 
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
@@ -96,12 +97,19 @@ class ObjectMapper
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
+            // Use a foreach to map key/value arrays
+            if (\count($property['type']->types) === 1 && $property['type']->types[0]->isArray() && \count($property['type']->types[0]->genericTypes) === 2) {
+                $content .= $this->buildPropertyForeachMapping($name, $property, $blueprint);
+
+                continue;
+            }
+
             $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type'], $blueprint);
             if (\array_key_exists('default', $property)) {
                 $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
             }
 
-            $content.= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
+            $content .= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
         }
 
         // Post mapping functions?
@@ -162,6 +170,10 @@ class ObjectMapper
 
                 return "{$type->type}::{$enumFunction}({$propertyName})";
             }
+
+            if (\is_subclass_of($type->type, MapsItself::class)) {
+                return "{$type->type}::mapSelf({$propertyName}, \$mapper)";
+            }
         }
 
         return '$mapper->map(\'' . $this->dataTypeFactory->print($type, $bluePrint->fileName) . '\', ' . $propertyName . ')';
@@ -177,5 +189,26 @@ class ObjectMapper
         if ($this->mapper->config->debug) {
             $this->clearCache();
         }
+    }
+
+    /** @param array{type: DataTypeCollection, default?: mixed} $property */
+    private function buildPropertyForeachMapping(string $propertyName, array $property, ClassBluePrint $blueprint): string
+    {
+        $canHaveDefault = \array_key_exists('default', $property);
+
+        $foreach  = \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '$x->' . $propertyName . ' = [];';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . 'foreach ($data[\'' . $propertyName . '\'] as $key => $value) {';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 4 : 3) . '$x->' . $propertyName . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
+        $foreach .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
+        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '}';
+
+        if ($canHaveDefault) {
+            $foreach  = \PHP_EOL . \str_repeat('    ', 2) . 'if (\\array_key_exists(\'' . $propertyName . '\', $data)) {' . $foreach;
+            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '} else {';
+            $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . ' = ' . \var_export($property['default'], true) . ';';
+            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
+        }
+
+        return $foreach;
     }
 }

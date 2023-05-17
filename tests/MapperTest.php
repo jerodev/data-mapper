@@ -150,5 +150,13 @@ final class MapperTest extends TestCase
             ],
             $dto,
         ];
+
+        // Allow uninitialized properties
+        $dto = new Aliases();
+        yield [
+            Aliases::class,
+            [],
+            $dto,
+        ];
     }
 }

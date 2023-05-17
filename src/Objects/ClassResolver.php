@@ -71,6 +71,20 @@ class ClassResolver
                 continue;
             }
 
+            // Find the class in the same namespace as the caller
+            if ($newline && $char === 'n' && \substr($file, $i, 10) === 'namespace ') {
+                $i += 10;
+                $namespace = '';
+                while (($char = $file[$i++]) !== ';') {
+                    $namespace .= $char;
+                }
+
+                $classInNamespace = $namespace . '\\' . $lastPart;
+                if (\class_exists($classInNamespace)) {
+                    return $classInNamespace;
+                }
+            }
+
             // If we are after a newline and find a use statement, parse it!
             if ($newline && $char === 'u' && \substr($file, $i, 4) === 'use ') {
                 $i += 4;

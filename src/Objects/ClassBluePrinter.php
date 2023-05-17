@@ -53,7 +53,10 @@ class ClassBluePrinter
 
             $arg = [
                 'name' => $param->getName(),
-                'type' => $this->resolveType($this->dataTypeFactory->fromString($type), $reflection->getName()),
+                'type' => $this->resolveType(
+                    $this->dataTypeFactory->fromString($type),
+                    $reflection->getName(),
+                ),
             ];
             if ($param->isDefaultValueAvailable()) {
                 $arg['default'] = $param->getDefaultValue();

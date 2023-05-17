@@ -52,7 +52,6 @@ class ClassBluePrinter
             }
 
             $arg = [
-                'name' => $param->getName(),
                 'type' => $this->resolveType(
                     $this->dataTypeFactory->fromString($type),
                     $reflection->getName(),
@@ -62,7 +61,7 @@ class ClassBluePrinter
                 $arg['default'] = $param->getDefaultValue();
             }
 
-            $bluePrint->constructorArguments[] = $arg;
+            $bluePrint->constructorArguments[$param->getName()] = $arg;
         }
     }
 
@@ -71,6 +70,11 @@ class ClassBluePrinter
         $properties = $reflection->getProperties();
         foreach ($properties as $property) {
             if (! $property->isPublic() || $property->isReadOnly()) {
+                continue;
+            }
+
+            // Already mapped through constructor?
+            if (\array_key_exists($property->getName(), $blueprint->constructorArguments)) {
                 continue;
             }
 

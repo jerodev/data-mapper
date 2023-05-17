@@ -29,19 +29,13 @@ final class ClassBluePrinterTest extends TestCase
         yield [
             UserDto::class,
             [
-                [
-                    'name' => 'name',
+                'name' => [
                     'type' => new DataTypeCollection([
                         new DataType('string', false),
                     ]),
                 ],
             ],
             [
-                'name' => [
-                    'type' => new DataTypeCollection([
-                        new DataType('string', false),
-                    ]),
-                ],
                 'friends' => [
                     'type' => new DataTypeCollection([
                         new DataType(

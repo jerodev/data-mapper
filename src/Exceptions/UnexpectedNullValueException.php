@@ -6,8 +6,8 @@ use Exception;
 
 class UnexpectedNullValueException extends Exception
 {
-    public function __construct()
+    public function __construct(string $propertyName)
     {
-        parent::__construct('Unexpected null value for non nullable type.');
+        parent::__construct("Unexpected null value for property '{$propertyName}'");
     }
 }

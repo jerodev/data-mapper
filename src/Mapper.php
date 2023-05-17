@@ -2,122 +2,131 @@
 
 namespace Jerodev\DataMapper;
 
+use Jerodev\DataMapper\Exceptions\CouldNotMapValueException;
+use Jerodev\DataMapper\Exceptions\CouldNotResolveClassException;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
-use Jerodev\DataMapper\Models\DataType;
-use Jerodev\DataMapper\Models\MapperOptions;
-use Jerodev\DataMapper\Printers\BluePrinter;
+use Jerodev\DataMapper\Objects\ObjectMapper;
+use Jerodev\DataMapper\Types\DataType;
+use Jerodev\DataMapper\Types\DataTypeCollection;
+use Jerodev\DataMapper\Types\DataTypeFactory;
 
 class Mapper
 {
-    private MapperOptions $mapperOptions;
-    private ObjectMapper $objectMapper;
+    private readonly DataTypeFactory $dataTypeFactory;
+    private readonly ObjectMapper $objectMapper;
+    public readonly MapperConfig $config;
 
     public function __construct(
-        ?MapperOptions $mapperOptions = null
+        ?MapperConfig $config = null,
     ) {
-        $this->mapperOptions = $mapperOptions ?? new MapperOptions();
+        $this->config = $config ?? new MapperConfig();
+
+        $this->dataTypeFactory = new DataTypeFactory();
         $this->objectMapper = new ObjectMapper(
             $this,
-            new BluePrinter()
+            $this->dataTypeFactory,
         );
     }
 
     /**
      * Map anything!
      *
-     * @param DataType|string $type The type to map to.
+     * @param DataTypeCollection|string $typeCollection The type to map to.
      * @param mixed $data Deserialized data to map to the type.
      * @return mixed
      */
-    public function map($type, $data)
+    public function map($typeCollection, $data)
     {
-        if ($type === 'null') {
-            return null;
+        if (\is_string($typeCollection)) {
+            return $this->map(
+                $this->dataTypeFactory->fromString($typeCollection),
+                $data,
+            );
         }
 
-        if (\is_string($type)) {
-            $type = DataType::parse($type);
-        }
-
-        if ($data === null) {
-            if ($type->isNullable() || $this->mapperOptions->strictNullMapping === false) {
+        if ($data === 'null' || $data === null) {
+            if ($this->config->strictNullMapping === false || $typeCollection->isNullable()) {
                 return null;
-            } else {
-                throw new UnexpectedNullValueException();
+            }
+
+            throw new UnexpectedNullValueException($this->dataTypeFactory->print($typeCollection));
+        }
+
+        // Loop over all possible types and parse to the first one that matches
+        foreach ($typeCollection->types as $type) {
+            try {
+                if ($type->isNative()) {
+                    return $this->mapNativeType($type, $data);
+                }
+
+                if ($type->isArray()) {
+                    return $this->mapArray($type, $data);
+                }
+
+                return $this->mapObject($type, $data);
+            } catch (CouldNotMapValueException) {
+                continue;
             }
         }
 
-        if ($type->isArray() && \is_array($data)) {
-            return $this->mapArray($type, $data);
-        }
-
-        if ($type->isNativeType()) {
-            return $this->mapNative($type, $data);
-        }
-
-        if (empty($data) && $type->isNullable()) {
-            return null;
-        }
-
-        return $this->objectMapper->map($type->getType(), $data);
+        throw new CouldNotMapValueException($data, $typeCollection);
     }
 
     /**
-     * Map an array of a certain type.
-     *
-     * @param DataType $type
-     * @param array $data
-     * @return array
+     * Remove cached class mappers.
      */
-    private function mapArray(DataType $type, array $data): array
+    public function clearCache(): void
     {
-        $singleType = $type->getArrayChildType();
-
-        $array = [];
-        foreach ($data as $key => $value) {
-            // If we have a nested array, keep calling this function.
-            if (\is_array($value) && $singleType->isArray()) {
-                $array[$key] = self::mapArray($singleType, $value);
-            } else {
-                $array[$key] = $this->map($singleType, $value);
-            }
-        }
-
-        return $array;
+        $this->objectMapper->clearCache();
     }
 
-    /**
-     * Map a native php type.
-     *
-     * @param DataType $type
-     * @param mixed $data
-     * @return mixed
-     */
-    private function mapNative(DataType $type, $data)
+    private function mapNativeType(DataType $type, mixed $data): float|object|bool|int|string|null
     {
+        return match ($type->type) {
+            'null' => null,
+            'bool' => \filter_var($data, \FILTER_VALIDATE_BOOL),
+            'int' => (int) $data,
+            'float' => (float) $data,
+            'string' => (string) $data,
+            'object' => (object) $data,
+            default => throw new CouldNotMapValueException($data, $type),
+        };
+    }
+
+    private function mapArray(DataType $type, mixed $data): array
+    {
+        if (! \is_iterable($data)) {
+            throw new CouldNotMapValueException($data, $type);
+        }
+
         if ($type->isGenericArray()) {
             return (array) $data;
         }
 
-        switch ($type->getType()) {
-            case 'bool':
-                return \filter_var($data, FILTER_VALIDATE_BOOLEAN);
-            case 'float':
-                return \floatval($data);
-            case 'int':
-                return \intval($data);
-            case 'object':
-                return (object)$data;
-            case 'string':
-                return \strval($data);
+        $keyType = null;
+        $valueType = $type->genericTypes[0];
+        if (\count($type->genericTypes) > 1) {
+            [$keyType, $valueType] = $type->genericTypes;
         }
 
-        // Unknown internal type.
-        return $data;
+        $mappedArray = [];
+        foreach ($data as $key => $value) {
+            if ($keyType !== null) {
+                $key = $this->map($keyType, $key);
+            }
+
+            $mappedArray[$key] = $this->map($valueType, $value);
+        }
+
+        return $mappedArray;
     }
 
-    public function getOptions(): MapperOptions
+    private function mapObject(DataType $type, mixed $data): ?object
     {
-        return $this->mapperOptions;
+        try {
+            return $this->objectMapper->map($type, $data);
+        } catch (CouldNotResolveClassException) {
+            throw new CouldNotMapValueException($data, $type);
+        }
     }
 }

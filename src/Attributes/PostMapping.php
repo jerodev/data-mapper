@@ -1,16 +1,20 @@
 <?php
-// phpcs:ignoreFile
 
 namespace Jerodev\DataMapper\Attributes;
 
 use Attribute;
 use Closure;
 
-#[Attribute(Attribute::TARGET_CLASS)]
+/**
+ * Execute a function right after the class has been mapped.
+ * Can be either the name of a public function on the class, or a closure accepting the new object.
+ * The function is gets the data array as a first parameter and the new object as the second.
+ */
+#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class PostMapping
 {
     public function __construct(
-        public string|Closure $postMappingCallback
+        public string|Closure $postMappingCallback,
     ) {
     }
 }

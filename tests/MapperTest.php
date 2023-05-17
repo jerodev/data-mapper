@@ -5,119 +5,175 @@ namespace Jerodev\DataMapper\Tests;
 use Generator;
 use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
-use Jerodev\DataMapper\Models\MapperOptions;
-use Jerodev\DataMapper\Tests\TestClasses\SimpleClass;
-use Jerodev\DataMapper\Tests\TestClasses\StatusEnum;
+use Jerodev\DataMapper\MapperConfig;
+use Jerodev\DataMapper\Tests\_Mocks\Aliases;
+use Jerodev\DataMapper\Tests\_Mocks\Constructor;
+use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
+use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
+use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
+use Jerodev\DataMapper\Tests\_Mocks\UserDto;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
 {
-    private Mapper $mapper;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mapper = new Mapper();
-    }
-
     /**
      * @test
-     * @dataProvider nativeTypeDataProvider
+     * @dataProvider nativeValuesDataProvider
      */
-    public function it_should_map_native_types($expected, string $type, $input): void
+    public function it_should_map_native_values(string $type, mixed $value, mixed $expectation): void
     {
-        $this->assertSame($expected, $this->mapper->map($type, $input));
+        $this->assertSame($expectation, (new Mapper())->map($type, $value));
     }
-
     /**
      * @test
-     * @dataProvider arrayTypeDataProvider
+     * @dataProvider objectValuesDataProvider
      */
-    public function it_should_map_array_types($expected, string $type, $input): void
+    public function it_should_map_objects(string $type, mixed $value, mixed $expectation): void
     {
-        $this->assertEquals($expected, $this->mapper->map($type, $input));
+        $config = new MapperConfig();
+        $config->classMapperDirectory = __DIR__ . '/..';
+
+        $this->assertEquals($expectation, (new Mapper($config))->map($type, $value));
     }
 
     /** @test */
-    public function it_should_map_nullable_object_as_null(): void
+    public function it_should_throw_on_unexpected_null_value(): void
     {
-        $class = new class {
-            public string $foo;
-        };
+        $config = new MapperConfig();
+        $config->strictNullMapping = true;
 
-        $mapped = $this->mapper->map('?' . \get_class($class), null);
-
-        $this->assertNull($mapped);
-    }
-
-    /** @test */
-    public function it_should_throw_exception_when_strict_mapping_null_values(): void
-    {
         $this->expectException(UnexpectedNullValueException::class);
 
-        $this->mapper->map('int', null);
+        (new Mapper($config))->map('string', null);
     }
 
-    /** @test */
-    public function it_should_allow_non_strict_null_mapping_through_options(): void
+    public static function nativeValuesDataProvider(): Generator
     {
-        $options = new MapperOptions();
-        $options->strictNullMapping = false;
+        yield ['null', null, null];
 
-        $this->mapper = new Mapper($options);
-        $this->assertNull($this->mapper->map('int', null));
+        yield ['array', [1, 'b'], [1, 'b']];
+
+        yield ['bool[]', [true, false], [true, false]];
+        yield ['bool', '1', true];
+        yield ['bool', '', false];
+
+        yield ['float', 6.8, 6.8];
+        yield ['float', 5, 5.0];
+        yield ['float', '1', 1.0];
+        yield ['float', '1.3', 1.3];
+
+        yield ['int', 5, 5];
+        yield ['int', '8', 8];
+        yield ['int', 8.3, 8];
+        yield ['int[]', [5, 8], [5, 8]];
+        yield ['int[][][][][]', [[[[['5']]]]], [[[[[5]]]]]];
+        yield ['array<int[][]>[][]', [[[[['0']]]]], [[[[[0]]]]]];
+
+        yield ['string', 4, '4'];
+        yield ['array<string>', [4, 5], ['4', '5']];
+
+        yield ['array<int, ' . SuitEnum::class . '>', ['8.0' => 'H', 9 => 'S'], ['8' => SuitEnum::Hearts, '9' => SuitEnum::Spades]];
     }
 
-    public function nativeTypeDataProvider(): Generator
+    public static function objectValuesDataProvider(): Generator
     {
-        yield [['1', '2', '3'], 'array', ['1', '2', '3']];
-        yield [['1'], 'array', '1'];
-        yield [[], 'array', []];
-        yield [['1', '2', '3'], 'iterable', ['1', '2', '3']];
-        yield [['1'], 'iterable', '1'];
-        yield [[], 'iterable', []];
-        yield [[['1']], 'string[][]', [[1]]];
-        yield [['first' => [1], 'second' => [2, 3]], 'int[][]', ['first' => ['1'], 'second' => ['2', '3']]];
+        yield ['object[]', [['a' => 'b'], ['c' => 'd']], [(object)['a' => 'b'], (object)['c' => 'd']]];
+        yield ['Mapper', [], new Mapper()];
 
-        yield [true, 'bool', 'true'];
-        yield [true, 'bool', 1];
-        yield [false, 'bool', 'false'];
-        yield [false, 'bool', 0];
-
-        yield [5.7, 'float', '5.7'];
-        yield [5.8, 'float', 5.8];
-
-        yield [5, 'int', '5'];
-        yield [6, 'int', 6];
-
-        yield ['foo', 'string', 'foo'];
-        yield ['7', 'string', 7];
-
-        yield [
-            StatusEnum::Success,
-            StatusEnum::class,
-            'Success',
+        $dto = new UserDto('Jeroen');
+        $dto->favoriteSuit = SuitEnum::Diamonds;
+        $dto->friends = [
+            new UserDto('John'),
+            new UserDto('Jane'),
         ];
-    }
+        yield [
+            UserDto::class,
+            [
+                'name' => 'Jeroen',
+                'favoriteSuit' => 'D',
+                'friends' => [
+                    ['name' => 'john'],
+                    ['name' => 'jane'],
+                ],
+            ],
+            $dto
+        ];
 
-    public function arrayTypeDataProvider(): Generator
-    {
-        yield [[true, true, false], 'bool[]', ['1', true, 'false']];
+        $dto = new SuperUserDto('Superman'); // Uppercase because UserDto post mapping
+        $dto->canFly = true;
+        $dto->stars = 3;    // Increased 3 times by post mapping function
+        yield [
+            SuperUserDto::class,
+            [
+                'name' => 'superman',
+                'canFly' => true,
+            ],
+            $dto,
+        ];
 
-        yield [[1, 2, 3], 'float[]', ['1', 2, '3']];
-        yield [[1, 2, 3], 'int[]', ['1', 2, '3']];
-        yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
-        yield [['1', '2', '3'], 'string[]', ['1', 2, '3']];
-        yield [['a' => 'b', 'b' => 'c', 4 => '3'], 'array<string>', ['a' => 'b', 'b' => 'c', 4 => 3]];
-        yield [[7 => 'b', 6 => 'c', 4 => '3'], 'array<int, string>', ['7' => 'b', '6' => 'c', 4 => 3]];
-        yield [[7 => ['b'], 6 => ['c', '3']], 'array<int, string[]>', ['7' => ['b'], '6' => ['c', 3]]];
+        $dto = new SelfMapped();
+        $dto->users = ['me', ['myself', 'I']];
+        yield [
+            SelfMapped::class,
+            [
+                'data' => [
+                    'me',
+                    [
+                        'myself',
+                        'I',
+                    ],
+                ],
+            ],
+            $dto,
+        ];
 
-        $object = new SimpleClass();
-        $object->foo = 'bar';
-        $object2 = new SimpleClass();
-        $object2->foo = 'baz';
-        yield [['bar' => $object, 'baz' => $object2], 'array<string, ' . SimpleClass::class . '>', ['bar' => ['foo' => 'bar'], 'baz' => ['foo' => 'baz']]];
-        yield [[$object, $object2], 'array<' . SimpleClass::class . '>', [['foo' => 'bar'], ['foo' => 'baz']]];
+        $dto = new Aliases();
+        $dto->userAliases = [
+            'Jerodev' => new UserDto('Jeroen'),
+            'Foo' => new UserDto('Bar'),
+        ];
+        $dto->sm = new SelfMapped();
+        $dto->sm->users = ['q'];
+        yield [
+            Aliases::class,
+            [
+                'userAliases' => [
+                    'Jerodev' => [
+                        'name' => 'Jeroen',
+                    ],
+                    'Foo' => [
+                        'name' => 'Bar',
+                    ],
+                ],
+                'sm' => [
+                    'data' => ['q'],
+                ],
+            ],
+            $dto,
+        ];
+
+        // Allow uninitialized properties
+        $dto = new Aliases();
+        yield [
+            Aliases::class,
+            [],
+            $dto,
+        ];
+
+        // Array in constructor
+        $dto = new Constructor([
+            new UserDto('Jerodev'),
+        ]);
+        yield [
+            Constructor::class,
+            [
+                'users' => [
+                    [
+                        'name' => 'Jerodev',
+                    ],
+                ],
+            ],
+            $dto,
+        ];
     }
 }

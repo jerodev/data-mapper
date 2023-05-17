@@ -52,7 +52,6 @@ class ClassBluePrinter
             }
 
             $arg = [
-                'name' => $param->getName(),
                 'type' => $this->resolveType(
                     $this->dataTypeFactory->fromString($type),
                     $reflection->getName(),
@@ -62,7 +61,7 @@ class ClassBluePrinter
                 $arg['default'] = $param->getDefaultValue();
             }
 
-            $bluePrint->constructorArguments[] = $arg;
+            $bluePrint->constructorArguments[$param->getName()] = $arg;
         }
     }
 

@@ -81,13 +81,13 @@ class ObjectMapper
 
         // Instantiate a new object
         $args = [];
-        foreach ($blueprint->constructorArguments as $argument) {
-            $arg = "\$data['{$argument['name']}']";
+        foreach ($blueprint->constructorArguments as $name => $argument) {
+            $arg = "\$data['{$name}']";
 
             if ($argument['type'] !== null) {
                 $arg = $this->castInMapperFunction($arg, $argument['type'], $blueprint);
                 if (\array_key_exists('default', $argument)) {
-                    $arg = $this->wrapDefault($arg, $argument['name'], $argument['default']);
+                    $arg = $this->wrapDefault($arg, $name, $argument['default']);
                 }
             }
 

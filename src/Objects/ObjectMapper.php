@@ -224,6 +224,10 @@ class ObjectMapper
             $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
         }
 
+        if ($this->mapper->config->allowUninitializedFields && ! \array_key_exists('default', $property)) {
+            $foreach = $this->wrapArrayKeyExists($foreach, $propertyName);
+        }
+
         return $foreach;
     }
 }

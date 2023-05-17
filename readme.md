@@ -83,12 +83,13 @@ The mapper comes with a few configuration options that can be set using the [`Ma
 object and passed to the mappers' constructor. This is not required, if no configuration is passed, the default config
 is used.
 
-| Option                 | Type     | Default        | Description                                                                                                                                                                |
-|------------------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `classMapperDirectory` | `string` | `/tmp/mappers` | This is the location the mapper will create cached mapper functions for objects.<br />The default location is a mappers function in the operating system temporary folder. |
-| `debug`                | `bool`   | `false`        | Enabling debug will clear all cached mapper functions after mapping has completed.                                                                                         |
-| `enumTryFrom`          | `bool`   | `false`        | Enabling this will use the `::tryFrom()` method instead of `::from()` to parse strings to enums.                                                                           |
-| `strictNullMapping`    | `bool`   | `true`         | If enabled, the mapper will throw an error when a `null` value is passed for a property that was not typed as nullable.                                                    |
+| Option                     | Type     | Default        | Description                                                                                                                                                                |
+|----------------------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `allowUninitializedFields` | `bool`   | `true`         | If disabled, the mapper will fail if one of the class properties that does not have a default value was not present in the data array.                                     |
+| `classMapperDirectory`     | `string` | `/tmp/mappers` | This is the location the mapper will create cached mapper functions for objects.<br />The default location is a mappers function in the operating system temporary folder. |
+| `debug`                    | `bool`   | `false`        | Enabling debug will clear all cached mapper functions after mapping has completed.                                                                                         |
+| `enumTryFrom`              | `bool`   | `false`        | Enabling this will use the `::tryFrom()` method instead of `::from()` to parse strings to enums.                                                                           |
+| `strictNullMapping`        | `bool`   | `true`         | If enabled, the mapper will throw an error when a `null` value is passed for a property that was not typed as nullable.                                                    |
 
 ## Under the hood
 For simple native types, the mapper will use casting to convert the data to the correct type.

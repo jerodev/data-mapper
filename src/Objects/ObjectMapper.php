@@ -109,7 +109,13 @@ class ObjectMapper
                 $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
             }
 
-            $content .= \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
+            $propertySet = \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
+
+            if ($this->mapper->config->allowUninitializedFields && ! \array_key_exists('default', $property)) {
+                $propertySet = $this->wrapArrayKeyExists($propertySet, $name);
+            }
+
+            $content .= $propertySet;
         }
 
         // Post mapping functions?
@@ -184,6 +190,15 @@ class ObjectMapper
         return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
     }
 
+    private function wrapArrayKeyExists(string $expression, string $arrayKey): string
+    {
+        $content  = \PHP_EOL . \str_repeat('    ', 2) . "if (\\array_key_exists('{$arrayKey}', \$data)) {";
+        $content .= \str_replace(\PHP_EOL, \PHP_EOL . '    ', $expression) . \PHP_EOL;
+        $content .= \str_repeat('    ', 2) . '}';
+
+        return $content;
+    }
+
     public function __destruct()
     {
         if ($this->mapper->config->debug) {
@@ -207,6 +222,10 @@ class ObjectMapper
             $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '} else {';
             $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . ' = ' . \var_export($property['default'], true) . ';';
             $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
+        }
+
+        if ($this->mapper->config->allowUninitializedFields && ! \array_key_exists('default', $property)) {
+            $foreach = $this->wrapArrayKeyExists($foreach, $propertyName);
         }
 
         return $foreach;

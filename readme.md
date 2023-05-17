@@ -133,7 +133,6 @@ class UserDto
 function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $mapper, array $data)
 {
     $x = new Jerodev\DataMapper\Tests\_Mocks\UserDto((string) $data['name']);
-    $x->name = (string) $data['name'];
     $x->friends = (\array_key_exists('friends', $data) ? \array_map(static fn ($x6462755ab00b1) => $mapper->map('Jerodev\DataMapper\Tests\_Mocks\UserDto', $x6462755ab00b1), $data['friends']) : []);
     $x->favoriteSuit = (\array_key_exists('favoriteSuit', $data) ? Jerodev\DataMapper\Tests\_Mocks\SuitEnum::from($data['favoriteSuit']) : NULL);
 

@@ -209,22 +209,13 @@ class ObjectMapper
     /** @param array{type: DataTypeCollection, default?: mixed} $property */
     private function buildPropertyForeachMapping(string $propertyName, array $property, ClassBluePrint $blueprint): string
     {
-        $canHaveDefault = \array_key_exists('default', $property);
-
-        $foreach  = \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '$x->' . $propertyName . ' = [];';
-        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . 'foreach ($data[\'' . $propertyName . '\'] as $key => $value) {';
-        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 4 : 3) . '$x->' . $propertyName . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
+        $foreach  = \PHP_EOL . \str_repeat('    ', 2) . '$x->' . $propertyName . ' = [];';
+        $foreach .= \PHP_EOL . \str_repeat('    ', 2) . 'foreach ($data[\'' . $propertyName . '\'] as $key => $value) {';
+        $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
         $foreach .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
-        $foreach .= \PHP_EOL . \str_repeat('    ', $canHaveDefault ? 3 : 2) . '}';
+        $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
 
-        if ($canHaveDefault) {
-            $foreach  = \PHP_EOL . \str_repeat('    ', 2) . 'if (\\array_key_exists(\'' . $propertyName . '\', $data)) {' . $foreach;
-            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '} else {';
-            $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . ' = ' . \var_export($property['default'], true) . ';';
-            $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
-        }
-
-        if ($this->mapper->config->allowUninitializedFields && ! \array_key_exists('default', $property)) {
+        if (\array_key_exists('default', $property) || $this->mapper->config->allowUninitializedFields) {
             $foreach = $this->wrapArrayKeyExists($foreach, $propertyName);
         }
 

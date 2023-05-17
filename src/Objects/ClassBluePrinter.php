@@ -73,6 +73,11 @@ class ClassBluePrinter
                 continue;
             }
 
+            // Already mapped through constructor?
+            if (\array_key_exists($property->getName(), $blueprint->constructorArguments)) {
+                continue;
+            }
+
             $type = $property->getType()?->getName();
             if (\in_array($type, [null, 'array', 'iterable']) && $property->getDocComment()) {
                 $doc = $this->docBlockParser->parse($property->getDocComment());

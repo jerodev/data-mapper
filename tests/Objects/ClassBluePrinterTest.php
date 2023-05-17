@@ -36,11 +36,6 @@ final class ClassBluePrinterTest extends TestCase
                 ],
             ],
             [
-                'name' => [
-                    'type' => new DataTypeCollection([
-                        new DataType('string', false),
-                    ]),
-                ],
                 'friends' => [
                     'type' => new DataTypeCollection([
                         new DataType(

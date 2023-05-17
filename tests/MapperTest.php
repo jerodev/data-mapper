@@ -7,6 +7,7 @@ use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Tests\_Mocks\Aliases;
+use Jerodev\DataMapper\Tests\_Mocks\Constructor;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
@@ -156,6 +157,22 @@ final class MapperTest extends TestCase
         yield [
             Aliases::class,
             [],
+            $dto,
+        ];
+
+        // Array in constructor
+        $dto = new Constructor([
+            new UserDto('Jerodev'),
+        ]);
+        yield [
+            Constructor::class,
+            [
+                'users' => [
+                    [
+                        'name' => 'Jerodev',
+                    ],
+                ],
+            ],
             $dto,
         ];
     }

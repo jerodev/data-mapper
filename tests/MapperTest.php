@@ -174,6 +174,7 @@ final class MapperTest extends TestCase
                         'name' => 'Jerodev',
                     ],
                 ],
+                'foo' => null,
             ],
             $dto,
         ];

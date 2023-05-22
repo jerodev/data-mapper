@@ -46,7 +46,9 @@ class ClassBluePrinter
 
         // Loop over each parameter and describe it
         foreach ($constructor->getParameters() as $param) {
-            $type = $param->getType()?->getName();
+            // Using the getName() function omits the question mark for nullable types.
+            $type = (string) $param->getType();
+
             if ($doc !== null && \in_array($type, [null, 'array', 'iterable'])) {
                 $type = $doc->getParamType($param->getName());
             }

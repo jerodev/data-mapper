@@ -9,6 +9,7 @@ final class Constructor
      */
     public function __construct(
         public readonly array $users,
+        public ?bool $foo = null,
     ) {
     }
 }

@@ -56,6 +56,11 @@ final class ClassBluePrinterTest extends TestCase
                     ]),
                     'default' => null,
                 ],
+                'score' => [
+                    'type' => new DataTypeCollection([
+                        new DataType('int', true)
+                    ]),
+                ],
             ],
         ];
     }

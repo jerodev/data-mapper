@@ -184,7 +184,7 @@ final class MapperTest extends TestCase
         yield [
             UserDto::class,
             [
-                'name' => 'superman',
+                'name' => 'Joe',
                 'score' => null,
             ],
             $dto,

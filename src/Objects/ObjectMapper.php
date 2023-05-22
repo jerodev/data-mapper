@@ -86,9 +86,10 @@ class ObjectMapper
 
             if ($argument['type'] !== null) {
                 $arg = $this->castInMapperFunction($arg, $argument['type'], $blueprint);
-                if (\array_key_exists('default', $argument)) {
-                    $arg = $this->wrapDefault($arg, $name, $argument['default']);
-                }
+            }
+
+            if (\array_key_exists('default', $argument)) {
+                $arg = $this->wrapDefault($arg, $name, $argument['default']);
             }
 
             $args[] = $arg;

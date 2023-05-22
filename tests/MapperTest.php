@@ -165,7 +165,6 @@ final class MapperTest extends TestCase
         // Array in constructor
         $dto = new Constructor([
             new UserDto('Jerodev'),
-            null,
         ]);
         yield [
             Constructor::class,

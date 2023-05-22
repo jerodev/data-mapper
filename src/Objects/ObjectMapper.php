@@ -149,6 +149,11 @@ class ObjectMapper
     {
         if (\count($type->types) === 1) {
             $type = $type->types[0];
+
+            if ($type->isNullable) {
+                return "{$propertyName} === null ? null : " . $this->castInMapperFunction($propertyName, new DataTypeCollection([$type->removeNullable()]), $bluePrint);
+            }
+
             if ($type->isNative()) {
                 return match ($type->type) {
                     'null' => 'null',
@@ -187,6 +192,10 @@ class ObjectMapper
 
     private function wrapDefault(string $value, string $arrayKey, mixed $defaultValue): string
     {
+        if (\str_contains($value, '?')) {
+            $value = "({$value})";
+        }
+
         return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
     }
 

@@ -13,6 +13,7 @@ class UserDto
     /** @var array<self> */
     public array $friends = [];
     public ?SuitEnum $favoriteSuit = null;
+    public ?int $score;
 
     public function __construct(string $name)
     {

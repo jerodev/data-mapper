@@ -47,4 +47,12 @@ class DataType
             ],
         );
     }
+
+    /**
+     * returns a new instance of itself that is not nullable
+     */
+    public function removeNullable(): self
+    {
+        return new self($this->type, false, $this->genericTypes);
+    }
 }

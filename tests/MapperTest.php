@@ -65,6 +65,8 @@ final class MapperTest extends TestCase
         yield ['int', 5, 5];
         yield ['int', '8', 8];
         yield ['int', 8.3, 8];
+        yield ['?int', null, null];
+        yield ['int|string|null', null, null];
         yield ['int[]', [5, 8], [5, 8]];
         yield ['int[][][][][]', [[[[['5']]]]], [[[[[5]]]]]];
         yield ['array<int[][]>[][]', [[[[['0']]]]], [[[[[0]]]]]];
@@ -172,6 +174,18 @@ final class MapperTest extends TestCase
                         'name' => 'Jerodev',
                     ],
                 ],
+            ],
+            $dto,
+        ];
+
+        // Null for nullable properties
+        $dto = new UserDto('Joe');
+        $dto->score = null;
+        yield [
+            UserDto::class,
+            [
+                'name' => 'superman',
+                'score' => null,
             ],
             $dto,
         ];

@@ -45,12 +45,16 @@ class ObjectMapper
             return $class::from($data);
         }
 
-        $blueprint = $this->classBluePrinter->print($class);
-
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
         if (! \file_exists($fileName)) {
-            \file_put_contents($fileName, $this->createObjectMappingFunction($blueprint, $functionName));
+            \file_put_contents(
+                $fileName,
+                $this->createObjectMappingFunction(
+                    $this->classBluePrinter->print($class),
+                    $functionName,
+                ),
+            );
         }
 
         // Include the function containing file and call the function.

@@ -1,6 +1,6 @@
 {
     "name": "jerodev/data-mapper",
-    "description": "Maps JSON data to a typed PHP object",
+    "description": "Maps raw data to a typed PHP object",
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -24,14 +24,14 @@ class ObjectMapper
     }
 
     /**
-     * @param DataType $type
+     * @param DataType|string $type
      * @param array|string $data
      * @return object|null
      * @throws CouldNotResolveClassException
      */
-    public function map(DataType $type, array|string $data): ?object
+    public function map(DataType|string $type, array|string $data): ?object
     {
-        $class = $this->dataTypeFactory->classResolver->resolve($type->type);
+        $class = $this->dataTypeFactory->classResolver->resolve(\is_string($type) ? $type : $type->type);
         if (\is_subclass_of($class, MapsItself::class)) {
             return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
         }
@@ -45,12 +45,16 @@ class ObjectMapper
             return $class::from($data);
         }
 
-        $blueprint = $this->classBluePrinter->print($class);
-
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
         if (! \file_exists($fileName)) {
-            \file_put_contents($fileName, $this->createObjectMappingFunction($blueprint, $functionName));
+            \file_put_contents(
+                $fileName,
+                $this->createObjectMappingFunction(
+                    $this->classBluePrinter->print($class),
+                    $functionName,
+                ),
+            );
         }
 
         // Include the function containing file and call the function.
@@ -186,6 +190,11 @@ class ObjectMapper
             if (\is_subclass_of($type->type, MapsItself::class)) {
                 return "{$type->type}::mapSelf({$propertyName}, \$mapper)";
             }
+
+            $className = $this->dataTypeFactory->print($type, $bluePrint->fileName);
+            if (\class_exists($className)) {
+                return "\$mapper->objectMapper->map('{$className}', {$propertyName})";
+            }
         }
 
         return '$mapper->map(\'' . $this->dataTypeFactory->print($type, $bluePrint->fileName) . '\', ' . $propertyName . ')';
@@ -197,7 +206,13 @@ class ObjectMapper
             $value = "({$value})";
         }
 
-        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
+        if (\is_object($defaultValue)) {
+            $defaultRaw = 'new ' . $defaultValue::class . '()';
+        } else {
+            $defaultRaw = \var_export($defaultValue, true);
+        }
+
+        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : {$defaultRaw})";
     }
 
     private function wrapArrayKeyExists(string $expression, string $arrayKey): string

@@ -13,14 +13,11 @@ use Jerodev\DataMapper\Types\DataTypeFactory;
 class Mapper
 {
     private readonly DataTypeFactory $dataTypeFactory;
-    private readonly ObjectMapper $objectMapper;
-    public readonly MapperConfig $config;
+    public readonly ObjectMapper $objectMapper;
 
     public function __construct(
-        ?MapperConfig $config = null,
+        public readonly MapperConfig $config = new MapperConfig(),
     ) {
-        $this->config = $config ?? new MapperConfig();
-
         $this->dataTypeFactory = new DataTypeFactory();
         $this->objectMapper = new ObjectMapper(
             $this,

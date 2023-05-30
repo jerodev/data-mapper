@@ -1,15 +1,7 @@
 # Data Mapper
 ![run-tests](https://github.com/jerodev/data-mapper/workflows/run-tests/badge.svg)
 
-This package will map any raw data into a strong typed PHP object.
-
-- [Installation](#installation)
-- [Basic mapping](#basic-mapping)
-  - [Typing properties](#typing-properties)
-  - [Custom mapping](#custom-mapping)
-  - [Post mapping](#post-mapping)
-- [Configuration](#configuration)
-- [Under the hood](#under-the-hood)
+This package will map any raw data into a predefined strong-typed PHP object.
 
 ## Installation
 The mapper has no external dependencies apart from PHP8.1 or higher. It can be installed using composer:
@@ -50,94 +42,8 @@ $entity = $mapper->map(User::class, [
 
 This is a simple example, but the mapper can also map nested objects, arrays of objects, keyed arrays, and even multi-level arrays.
 
-### Typing properties
-The type of the properties is checked from two places:
-1. The type of the property itself. This can be defined using typehints [introduced in PHP7.4](https://wiki.php.net/rfc/typed_properties_v2);
-2. [PHPDoc types](https://phpstan.org/writing-php-code/phpdoc-types) for properties and constructor parameters.
+## Documentation
+More information about mapping, configuration and best practices can be found in [the documentation](https://docs.deviaene.eu/data-mapper/).
 
-First the native type of the property is checked, if this is defined and can be mapped the type will be used.
-If no type is provided or the type is a generic array, the mapper will check the PHPDoc for type of the property.
-
-When a property is typed using a [union type](https://wiki.php.net/rfc/union_types_v2), the mapper will try to map any
-of the provided types from first to last until one mapping succeeds. The only exception is that `null` is always tried
-last.
-
-If no valid type was found for a property, the provided data will be set to the property directly without any
-conversion.
-
-### Custom mapping
-Sometimes, classes have a constructor that cannot be mapped automatically. For these cases there is a
-[`MapsItself`](https://github.com/jerodev/data-mapper/blob/master/src/MapsItself.php) interface that defines one
-static function: `mapObject`.
-When the mapper comes across a class that implements this interface, instead of using the constructor, the mapper will
-call the `MapsItself` with the provided data and is expected to return an instance of the current class.
-
-### Post mapping
-The mapper also comes with a post mapping attribute. When adding the [`#[PostMapping]` attribute](https://github.com/jerodev/data-mapper/blob/master/src/Attributes/PostMapping.php)
-to a class with a string parameter, this function will be called directly after mapping the object.
-
-A class can have multiple of these attributes and the attributes will be called in the same order as they are defined.
-
-## Configuration
-The mapper comes with a few configuration options that can be set using the [`MapperConfig`](https://github.com/jerodev/data-mapper/blob/master/src/MapperConfig.php)
-object and passed to the mappers' constructor. This is not required, if no configuration is passed, the default config
-is used.
-
-| Option                     | Type     | Default        | Description                                                                                                                                                                |
-|----------------------------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `allowUninitializedFields` | `bool`   | `true`         | If disabled, the mapper will fail if one of the class properties that does not have a default value was not present in the data array.                                     |
-| `classMapperDirectory`     | `string` | `/tmp/mappers` | This is the location the mapper will create cached mapper functions for objects.<br />The default location is a mappers function in the operating system temporary folder. |
-| `debug`                    | `bool`   | `false`        | Enabling debug will clear all cached mapper functions after mapping has completed.                                                                                         |
-| `enumTryFrom`              | `bool`   | `false`        | Enabling this will use the `::tryFrom()` method instead of `::from()` to parse strings to enums.                                                                           |
-| `strictNullMapping`        | `bool`   | `true`         | If enabled, the mapper will throw an error when a `null` value is passed for a property that was not typed as nullable.                                                    |
-
-## Under the hood
-For simple native types, the mapper will use casting to convert the data to the correct type.
-
-When requesting an array type, the mapper will call itself with the type of the array elements for each of the elements in the
-array.
-
-For object types, some magic happens. On the very first run for a certain class, the mapper will use reflection to
-gather information about the class and build a mapper function based on the properties of the class.
-The function will also take into account required and optional properties that are passed to the constructor.
-
-The goal is to have as much and as simple mapping as possible in these generated functions without having to go back
-to the mapper, to reach the best performance. For more information refer to the [class mapper function docs](./doc/class-mapper-function.md).
-
-As an example, this is one of the testing classes of this library and its generated mapper function:
-
-```php
-#[PostMapping('post')]
-class UserDto
-{
-    /** First name and last name */
-    public string $name;
-
-    /** @var array<self> */
-    public array $friends = [];
-    public ?SuitEnum $favoriteSuit = null;
-
-    public function __construct(string $name)
-    {
-        $this->name = $name;
-    }
-
-    public function post(): void
-    {
-        $this->name = \ucfirst($this->name);
-    }
-}
-```
-
-```php
-function jmapper_8cf8f45dc33c7f58ab728699ac3ebec3(Jerodev\DataMapper\Mapper $mapper, array $data)
-{
-    $x = new Jerodev\DataMapper\Tests\_Mocks\UserDto((string) $data['name']);
-    $x->friends = (\array_key_exists('friends', $data) ? \array_map(static fn ($x6462755ab00b1) => $mapper->map('Jerodev\DataMapper\Tests\_Mocks\UserDto', $x6462755ab00b1), $data['friends']) : []);
-    $x->favoriteSuit = (\array_key_exists('favoriteSuit', $data) ? Jerodev\DataMapper\Tests\_Mocks\SuitEnum::from($data['favoriteSuit']) : NULL);
-
-    $x->post($data, $x);
-
-    return $x;
-}
-```
+## License
+This library is licensed under the MIT License (MIT). Please see [License File](license.md) for more information.

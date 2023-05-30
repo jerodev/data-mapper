@@ -39,5 +39,10 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Jerodev\\DataMapper\\MapperCommands::clearCache"
+        ]
     }
 }

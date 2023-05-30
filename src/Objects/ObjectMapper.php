@@ -24,14 +24,14 @@ class ObjectMapper
     }
 
     /**
-     * @param DataType $type
+     * @param DataType|string $type
      * @param array|string $data
      * @return object|null
      * @throws CouldNotResolveClassException
      */
-    public function map(DataType $type, array|string $data): ?object
+    public function map(DataType|string $type, array|string $data): ?object
     {
-        $class = $this->dataTypeFactory->classResolver->resolve($type->type);
+        $class = $this->dataTypeFactory->classResolver->resolve(\is_string($type) ? $type : $type->type);
         if (\is_subclass_of($class, MapsItself::class)) {
             return \call_user_func([$class, 'mapSelf'], $data, $this->mapper);
         }
@@ -189,6 +189,11 @@ class ObjectMapper
 
             if (\is_subclass_of($type->type, MapsItself::class)) {
                 return "{$type->type}::mapSelf({$propertyName}, \$mapper)";
+            }
+
+            $className = $this->dataTypeFactory->print($type, $bluePrint->fileName);
+            if (\class_exists($className)) {
+                return "\$mapper->objectMapper->map('{$className}', {$propertyName})";
             }
         }
 

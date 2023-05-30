@@ -197,7 +197,13 @@ class ObjectMapper
             $value = "({$value})";
         }
 
-        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : " . \var_export($defaultValue, true) . ')';
+        if (\is_object($defaultValue)) {
+            $defaultRaw = 'new ' . $defaultValue::class . '()';
+        } else {
+            $defaultRaw = \var_export($defaultValue, true);
+        }
+
+        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : {$defaultRaw})";
     }
 
     private function wrapArrayKeyExists(string $expression, string $arrayKey): string

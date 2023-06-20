@@ -14,6 +14,58 @@ use ValueError;
 class ObjectMapperTest extends TestCase
 {
     /** @test */
+    public function it_should_generate_cache_key_based_on_config(): void
+    {
+        $classname = 'A' . \uniqid();
+        $fqcn = '\Jerodev\DataMapper\Tests\_Mocks\\' . $classname;
+        $filename = __DIR__ . '/../_Mocks/' . $classname . '.php';
+        $classContent = <<<PHP
+            <?php
+
+            namespace Jerodev\DataMapper\Tests\_Mocks;
+
+            final class {$classname}
+            {
+                public int \$id;
+            }
+            PHP;
+
+        \file_put_contents($filename, $classContent);
+
+        $config = new MapperConfig();
+        $config->classMapperDirectory = '{$TMP}/' . $classname;
+
+        $mapper = new Mapper($config);
+        $result = $mapper->map($fqcn, ['id' => '8']);
+        $this->assertSame(8, $result->id);
+
+        // Calling the mapper again should reuse the mapper function
+        $mapper->map($fqcn, ['id' => '10']);
+        $mapper->map($fqcn, ['id' => '11']);
+        $mapper->map($fqcn, ['id' => '0']);
+        $this->assertCount(1, \glob(\sys_get_temp_dir() . '/' . $classname . '/*'));
+
+        // Changing the file content should also not change the mapper function
+        \file_put_contents($filename, \str_replace('final ', '', $classContent));
+        $mapper->map($fqcn, ['id' => 8]);
+        $this->assertCount(1, \glob(\sys_get_temp_dir() . '/' . $classname . '/*'));
+
+        // Changing to md5 cache key should create a new mapper
+        $config->classCacheKeySource = 'md5';
+        $result = $mapper->map($fqcn, ['id' => '65536']);
+        $this->assertSame(65536, $result->id);
+        $this->assertCount(2, \glob(\sys_get_temp_dir() . '/' . $classname . '/*'));
+
+        // Changing the file contents should now also create a new mapper
+        \file_put_contents($filename, \str_replace('class', 'final class', $classContent));
+        $mapper->map($fqcn, ['id' => 8]);
+        $this->assertCount(3, \glob(\sys_get_temp_dir() . '/' . $classname . '/*'));
+
+        // Cleanup afterward
+        \unlink($filename);
+    }
+
+    /** @test */
     public function it_should_let_classes_map_themselves(): void
     {
         $value = (new ObjectMapper(new Mapper()))->map(

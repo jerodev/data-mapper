@@ -12,6 +12,16 @@ class MapperConfig
     public bool $allowUninitializedFields = true;
 
     /**
+     * This configures how the class mapper cache key is generated.
+     * Using a different key type can make sure the mapper does not fail when the class changes, however it can be a bit
+     * slower than other types.
+     * - fqcn: creates a hash based on the namespaced class name but does not check for changes
+     * - md5: creates an md5 hash from the file. This will change if the class changes, but is also slower than fqcn
+     * @phpstan-var 'fqcn'|'md5'
+     */
+    public string $classCacheKeySource = 'fqcn';
+
+    /**
      * This is the directly where generated mappers will be stored.
      * It is recommended to prune this directory on every deploy to prevent old mappers from being used.
      * The prefix `{$TMP}` is replaced with the system's temporary directory.

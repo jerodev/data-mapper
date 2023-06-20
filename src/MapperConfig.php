@@ -17,7 +17,8 @@ class MapperConfig
      * slower than other types.
      * - fqcn: creates a hash based on the namespaced class name but does not check for changes
      * - md5: creates an md5 hash from the file. This will change if the class changes, but is also slower than fqcn
-     * @phpstan-var 'fqcn'|'md5'
+     * - modified: creates an md5 hash from the file's modification time.
+     * @phpstan-var 'fqcn'|'md5'|'modified'
      */
     public string $classCacheKeySource = 'fqcn';
 

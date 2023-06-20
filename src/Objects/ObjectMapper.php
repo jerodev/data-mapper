@@ -47,9 +47,12 @@ class ObjectMapper
         }
 
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
-        if ($this->mapper->config->classCacheKeySource === 'md5') {
+        if ($this->mapper->config->classCacheKeySource === 'md5' || $this->mapper->config->classCacheKeySource === 'modified') {
             $reflection = new ReflectionClass($class);
-            $functionName = self::MAPPER_FUNCTION_PREFIX . \md5_file($reflection->getFileName());
+            $functionName = match ($this->mapper->config->classCacheKeySource) {
+                'md5' => self::MAPPER_FUNCTION_PREFIX . \md5_file($reflection->getFileName()),
+                'modified' => self::MAPPER_FUNCTION_PREFIX . \md5(\filemtime($reflection->getFileName())),
+            };
         }
 
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';

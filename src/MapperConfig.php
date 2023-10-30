@@ -42,6 +42,11 @@ class MapperConfig
     public bool $enumTryFrom = false;
 
     /**
+     * If true, an empty array will be mapped as null to a nullable object type.
+     */
+    public bool $nullObjectFromEmptyArray = false;
+
+    /**
      * If true, mapping a null value to a non-nullable field will throw an UnexpectedNullValueException.
      */
     public bool $strictNullMapping = true;

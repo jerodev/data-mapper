@@ -62,6 +62,7 @@ class ObjectMapper
                 $this->createObjectMappingFunction(
                     $this->classBluePrinter->print($class),
                     $functionName,
+                    $type instanceof DataType && $type->isNullable,
                 ),
             );
         }
@@ -88,9 +89,16 @@ class ObjectMapper
         return \rtrim($dir, \DIRECTORY_SEPARATOR);
     }
 
-    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName): string
+    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName, bool $isNullable): string
     {
         $tab = '    ';
+        $content = '';
+
+        if ($isNullable && $this->mapper->config->nullObjectFromEmptyArray) {
+            $content .= 'if (\$data === []) {' . \PHP_EOL;
+            $content .= $tab . 'return null;' . \PHP_EOL;
+            $content .= '}' . \PHP_EOL . \PHP_EOL;
+        }
 
         // Instantiate a new object
         $args = [];
@@ -107,7 +115,7 @@ class ObjectMapper
 
             $args[] = $arg;
         }
-        $content = '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
+        $content .= '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {

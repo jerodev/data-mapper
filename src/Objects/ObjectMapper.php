@@ -95,9 +95,9 @@ class ObjectMapper
         $content = '';
 
         if ($isNullable && $this->mapper->config->nullObjectFromEmptyArray) {
-            $content .= 'if (\$data === []) {' . \PHP_EOL;
-            $content .= $tab . 'return null;' . \PHP_EOL;
-            $content .= '}' . \PHP_EOL . \PHP_EOL;
+            $content .= $tab . $tab . 'if ($data === []) {' . \PHP_EOL;
+            $content .= $tab . $tab . $tab . 'return null;' . \PHP_EOL;
+            $content .= $tab . $tab . '}' . \PHP_EOL . \PHP_EOL;
         }
 
         // Instantiate a new object
@@ -115,7 +115,7 @@ class ObjectMapper
 
             $args[] = $arg;
         }
-        $content .= '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
+        $content .= $tab . $tab . '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
@@ -159,7 +159,7 @@ class ObjectMapper
         if (! \\function_exists('{$mapFunctionName}')) {
             function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
             {
-                {$content}
+        {$content}
 
                 return \$x;
             }

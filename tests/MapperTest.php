@@ -8,6 +8,7 @@ use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Tests\_Mocks\Aliases;
 use Jerodev\DataMapper\Tests\_Mocks\Constructor;
+use Jerodev\DataMapper\Tests\_Mocks\Nullable;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
@@ -24,6 +25,24 @@ final class MapperTest extends TestCase
     {
         $this->assertSame($expectation, (new Mapper())->map($type, $value));
     }
+
+    /** @test */
+    public function it_should_map_nullable_objects_from_empty_array(): void
+    {
+        $options = new MapperConfig();
+        $options->nullObjectFromEmptyArray = true;
+        $options->debug = true;
+
+        $mapper = new Mapper($options);
+
+        // Return null for nullable object
+        $this->assertNull($mapper->map('?' . Nullable::class, []));
+
+        // Don't return null if not nullable
+        $mapper->clearCache();
+        $this->assertInstanceOf(Nullable::class, $mapper->map(Nullable::class, []));
+    }
+
     /**
      * @test
      * @dataProvider objectValuesDataProvider

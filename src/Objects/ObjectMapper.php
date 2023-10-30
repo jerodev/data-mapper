@@ -9,6 +9,7 @@ use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
+use ReflectionClass;
 
 class ObjectMapper
 {
@@ -46,6 +47,14 @@ class ObjectMapper
         }
 
         $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
+        if ($this->mapper->config->classCacheKeySource === 'md5' || $this->mapper->config->classCacheKeySource === 'modified') {
+            $reflection = new ReflectionClass($class);
+            $functionName = match ($this->mapper->config->classCacheKeySource) {
+                'md5' => self::MAPPER_FUNCTION_PREFIX . \md5_file($reflection->getFileName()),
+                'modified' => self::MAPPER_FUNCTION_PREFIX . \md5(\filemtime($reflection->getFileName())),
+            };
+        }
+
         $fileName = $this->mapperDirectory() . \DIRECTORY_SEPARATOR . $functionName . '.php';
         if (! \file_exists($fileName)) {
             \file_put_contents(

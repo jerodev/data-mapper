@@ -46,12 +46,12 @@ class ObjectMapper
             return $class::from($data);
         }
 
-        $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class);
+        $functionName = self::MAPPER_FUNCTION_PREFIX . \md5($class . ($type instanceof DataType && $type->isNullable ? '1' : '0'));
         if ($this->mapper->config->classCacheKeySource === 'md5' || $this->mapper->config->classCacheKeySource === 'modified') {
             $reflection = new ReflectionClass($class);
             $functionName = match ($this->mapper->config->classCacheKeySource) {
-                'md5' => self::MAPPER_FUNCTION_PREFIX . \md5_file($reflection->getFileName()),
-                'modified' => self::MAPPER_FUNCTION_PREFIX . \md5(\filemtime($reflection->getFileName())),
+                'md5' => self::MAPPER_FUNCTION_PREFIX . \md5(\md5_file($reflection->getFileName()) . $functionName),
+                'modified' => self::MAPPER_FUNCTION_PREFIX . \md5(\filemtime($reflection->getFileName()) . $functionName),
             };
         }
 
@@ -62,6 +62,7 @@ class ObjectMapper
                 $this->createObjectMappingFunction(
                     $this->classBluePrinter->print($class),
                     $functionName,
+                    $type instanceof DataType && $type->isNullable,
                 ),
             );
         }
@@ -88,14 +89,24 @@ class ObjectMapper
         return \rtrim($dir, \DIRECTORY_SEPARATOR);
     }
 
-    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName): string
+    private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName, bool $isNullable): string
     {
         $tab = '    ';
+        $content = '';
+
+        if ($isNullable) {
+            $content .= $tab . $tab . 'if ($data === [] && $mapper->config->nullObjectFromEmptyArray) {' . \PHP_EOL;
+            $content .= $tab . $tab . $tab . 'return null;' . \PHP_EOL;
+            $content .= $tab . $tab . '}' . \PHP_EOL . \PHP_EOL;
+        }
 
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $name => $argument) {
             $arg = "\$data['{$name}']";
+            if ($argument['type']->isNullable()) {
+                $arg = "({$arg} ?? null)";
+            }
 
             if ($argument['type'] !== null) {
                 $arg = $this->castInMapperFunction($arg, $argument['type'], $blueprint);
@@ -107,7 +118,7 @@ class ObjectMapper
 
             $args[] = $arg;
         }
-        $content = '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
+        $content .= $tab . $tab . '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
@@ -118,7 +129,12 @@ class ObjectMapper
                 continue;
             }
 
-            $propertyMap = $this->castInMapperFunction("\$data['{$name}']", $property['type'], $blueprint);
+            $propertyName = "\$data['{$name}']";
+            if ($property['type']->isNullable()) {
+                $propertyName = "({$propertyName} ?? null)";
+            }
+
+            $propertyMap = $this->castInMapperFunction($propertyName, $property['type'], $blueprint);
             if (\array_key_exists('default', $property)) {
                 $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
             }
@@ -151,7 +167,7 @@ class ObjectMapper
         if (! \\function_exists('{$mapFunctionName}')) {
             function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
             {
-                {$content}
+        {$content}
 
                 return \$x;
             }

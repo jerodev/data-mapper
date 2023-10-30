@@ -1,5 +1,5 @@
 # Data Mapper
-![run-tests](https://github.com/jerodev/data-mapper/workflows/run-tests/badge.svg)
+![run-tests](https://github.com/jerodev/data-mapper/workflows/run-tests/badge.svg) [![Latest Stable Version](http://poser.pugx.org/jerodev/data-mapper/v)](https://packagist.org/packages/jerodev/data-mapper) 
 
 This package will map any raw data into a predefined strong-typed PHP object.
 

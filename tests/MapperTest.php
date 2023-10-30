@@ -31,15 +31,12 @@ final class MapperTest extends TestCase
     {
         $options = new MapperConfig();
         $options->nullObjectFromEmptyArray = true;
-        $options->debug = true;
-
         $mapper = new Mapper($options);
 
         // Return null for nullable object
         $this->assertNull($mapper->map('?' . Nullable::class, []));
 
         // Don't return null if not nullable
-        $mapper->clearCache();
         $this->assertInstanceOf(Nullable::class, $mapper->map(Nullable::class, []));
     }
 

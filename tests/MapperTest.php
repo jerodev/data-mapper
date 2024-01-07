@@ -91,6 +91,9 @@ final class MapperTest extends TestCase
         yield ['array<string>', [4, 5], ['4', '5']];
 
         yield ['array<int, ' . SuitEnum::class . '>', ['8.0' => 'H', 9 => 'S'], ['8' => SuitEnum::Hearts, '9' => SuitEnum::Spades]];
+
+        yield ['array{Foo: string, Bar: int}', ['Foo' => 'foo', 'Bar' => 7], ['Foo' => 'foo', 'Bar' => 7]];
+        yield ['array<array{Foo: string, Bar: int}>', [['Foo' => 'foo', 'Bar' => 7], ['Foo' => 'oof', 'Bar' => 9]], [['Foo' => 'foo', 'Bar' => 7], ['Foo' => 'oof', 'Bar' => 9]]];
     }
 
     public static function objectValuesDataProvider(): Generator

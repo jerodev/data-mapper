@@ -8,11 +8,13 @@ class DataType
      * @param string $type
      * @param bool $isNullable
      * @param array<DataTypeCollection> $genericTypes
+     * @param string|null $arrayFields
      */
     public function __construct(
         public readonly string $type,
         public readonly bool $isNullable,
         public readonly array $genericTypes = [],
+        public readonly ?string $arrayFields = null,
     ) {
     }
 

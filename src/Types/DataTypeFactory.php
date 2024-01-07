@@ -2,6 +2,7 @@
 
 namespace Jerodev\DataMapper\Types;
 
+use Jerodev\DataMapper\Exceptions\InvalidTypeException;
 use Jerodev\DataMapper\Exceptions\UnexpectedTokenException;
 use Jerodev\DataMapper\Objects\ClassResolver;
 
@@ -15,6 +16,10 @@ class DataTypeFactory
     ) {
     }
 
+    /**
+     * @throws InvalidTypeException
+     * @throws UnexpectedTokenException
+     */
     public function fromString(string $rawType, bool $forceNullable = false): DataTypeCollection
     {
         $rawType = \trim($rawType);
@@ -118,6 +123,26 @@ class DataTypeFactory
                 }
 
                 throw new UnexpectedTokenException('[');
+            } else if ($char === '{') {
+                if ($token !== 'array') {
+                    throw new UnexpectedTokenException('{');
+                }
+
+                $tokens[] = $token;
+                $token = '';
+                for (; $i < \strlen($type); $i++) {
+                    $token .= $type[$i];
+                    if ($type[$i] === '}') {
+                        break;
+                    }
+                }
+
+                if ($type[$i] !== '}') {
+                    throw new InvalidTypeException($type, 'Missing closing }');
+                }
+
+                $tokens[] = $token;
+                $token = '';
             } else {
                 $token .= $char;
             }
@@ -168,6 +193,14 @@ class DataTypeFactory
 
             if ($token === '?') {
                 $nullable = true;
+                continue;
+            }
+
+            if (\str_starts_with($token, '{')) {
+                $types[] = new DataType('array', $nullable, arrayFields: $token);
+                $stringStack = '';
+                $nullable = false;
+
                 continue;
             }
 
@@ -229,6 +262,14 @@ class DataTypeFactory
 
             if ($token === '?') {
                 $nullable = true;
+                continue;
+            }
+
+            if (\str_starts_with($token, '{')) {
+                $types[] = new DataType('array', $nullable, arrayFields: $token);
+                $stringStack = '';
+                $nullable = false;
+
                 continue;
             }
 

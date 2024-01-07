@@ -137,7 +137,7 @@ class DataTypeFactory
                     }
                 }
 
-                if ($type[$i] !== '}') {
+                if (! \str_ends_with($token, '}')) {
                     throw new InvalidTypeException($type, 'Missing closing }');
                 }
 

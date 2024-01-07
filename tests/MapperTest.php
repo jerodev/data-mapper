@@ -7,6 +7,7 @@ use Jerodev\DataMapper\Exceptions\UnexpectedNullValueException;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Tests\_Mocks\Aliases;
+use Jerodev\DataMapper\Tests\_Mocks\ArrayProperties;
 use Jerodev\DataMapper\Tests\_Mocks\Constructor;
 use Jerodev\DataMapper\Tests\_Mocks\Nullable;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
@@ -207,6 +208,21 @@ final class MapperTest extends TestCase
                 'name' => 'Joe',
                 'score' => null,
             ],
+            $dto,
+        ];
+
+        // Special array cases
+        $dto = new ArrayProperties();
+        $dto->ints = [2, 5, 8];
+        $dto->fieldsWithKeys = [
+            3 => [
+                'foo' => 'bar',
+                'bar' => 8,
+            ],
+        ];
+        yield [
+            ArrayProperties::class,
+            (array)$dto,
             $dto,
         ];
     }

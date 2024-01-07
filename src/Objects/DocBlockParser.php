@@ -54,14 +54,14 @@ class DocBlockParser
                 continue;
             }
 
-            if (\in_array($char, ['|', ','])) {
+            if (\in_array($char, ['|', ',', ':'])) {
                 $type .= $char;
                 $lastChar = $char;
                 $sawSpace = false;
                 continue;
             }
 
-            if ($sawSpace && ! \in_array($lastChar, ['|', ','])) {
+            if ($sawSpace && ! \in_array($lastChar, ['|', ',', ':'])) {
                 break;
             }
 

@@ -9,4 +9,7 @@ class ArrayProperties
 
     /** @var array<int, array{foo: string, bar: int}> */
     public array $fieldsWithKeys;
+
+    /** @var array<string, int> */
+    public array $keyValue;
 }

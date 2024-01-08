@@ -220,6 +220,10 @@ final class MapperTest extends TestCase
                 'bar' => 8,
             ],
         ];
+        $dto->keyValue = [
+            'foo' => 5,
+            'bar' => 8,
+        ];
         yield [
             ArrayProperties::class,
             (array)$dto,

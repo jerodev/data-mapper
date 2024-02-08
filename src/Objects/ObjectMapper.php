@@ -9,6 +9,27 @@ use Jerodev\DataMapper\MapsItself;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
+use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
+use PhpParser\Node\Expr\BinaryOp\Coalesce;
+use PhpParser\Node\Expr\BinaryOp\Identical;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\Ternary;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
+use PhpParser\Node\Param;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt;
+use PhpParser\PrettyPrinter\Standard;
 use ReflectionClass;
 
 class ObjectMapper
@@ -16,12 +37,14 @@ class ObjectMapper
     private const MAPPER_FUNCTION_PREFIX = 'jmapper_';
 
     private readonly ClassBluePrinter $classBluePrinter;
+    private readonly Standard $prettyPrinter;
 
     public function __construct(
         private readonly Mapper $mapper,
         private readonly DataTypeFactory $dataTypeFactory = new DataTypeFactory(),
     ) {
         $this->classBluePrinter = new ClassBluePrinter();
+        $this->prettyPrinter = new Standard();
     }
 
     /**
@@ -91,21 +114,47 @@ class ObjectMapper
 
     private function createObjectMappingFunction(ClassBluePrint $blueprint, string $mapFunctionName, bool $isNullable): string
     {
-        $tab = '    ';
-        $content = '';
+        /**
+         * This array will contain all statements that will be part of the function.
+         * @var array<Stmt> $ast
+         */
+        $ast = [];
 
         if ($isNullable) {
-            $content .= $tab . $tab . 'if ($data === [] && $mapper->config->nullObjectFromEmptyArray) {' . \PHP_EOL;
-            $content .= $tab . $tab . $tab . 'return null;' . \PHP_EOL;
-            $content .= $tab . $tab . '}' . \PHP_EOL . \PHP_EOL;
+            $ast[] = new Stmt\If_(
+                new BooleanAnd(
+                    new Identical(
+                        new Variable('data'),
+                        new Array_(attributes: ['kind' => Array_::KIND_SHORT]),
+                    ),
+                    new PropertyFetch(
+                        new PropertyFetch(
+                            new Variable('mapper'),
+                            'config',
+                        ),
+                        'nullObjectFromEmptyArray',
+                    ),
+                ),
+                [
+                    'stmts' => [
+                        new Stmt\Return_(new ConstFetch(new Name('null'))),
+                    ],
+                ],
+            );
         }
 
         // Instantiate a new object
         $args = [];
         foreach ($blueprint->constructorArguments as $name => $argument) {
-            $arg = "\$data['{$name}']";
+            $arg = new ArrayDimFetch(
+                new Variable('data'),
+                new String_($name),
+            );
             if ($argument['type']->isNullable()) {
-                $arg = "({$arg} ?? null)";
+                $arg = new Coalesce(
+                    $arg,
+                    new ConstFetch(new Name('null')),
+                );
             }
 
             if ($argument['type'] !== null) {
@@ -118,135 +167,263 @@ class ObjectMapper
 
             $args[] = $arg;
         }
-        $content .= $tab . $tab . '$x = new ' . $blueprint->namespacedClassName . '(' . \implode(', ', $args) . ');';
+        $ast[] = new Stmt\Expression(
+            new Assign(
+                new Variable('x'),
+                new New_(
+                    new Name($blueprint->namespacedClassName),
+                    $args,
+                ),
+            ),
+        );
 
         // Map properties
         foreach ($blueprint->properties as $name => $property) {
             // Use a foreach to map key/value arrays
             if (\count($property['type']->types) === 1 && $property['type']->types[0]->isArray() && \count($property['type']->types[0]->genericTypes) === 2) {
-                $content .= $this->buildPropertyForeachMapping($name, $property, $blueprint);
+                $ast = \array_merge($ast, $this->buildPropertyForeachMapping($name, $property, $blueprint));
 
                 continue;
             }
 
-            $propertyName = "\$data['{$name}']";
+            $value = new ArrayDimFetch(
+                new Variable('data'),
+                new String_($name),
+            );
             if ($property['type']->isNullable()) {
-                $propertyName = "({$propertyName} ?? null)";
+                $value = new Coalesce(
+                    $value,
+                    new ConstFetch(new Name('null')),
+                );
             }
 
-            $propertyMap = $this->castInMapperFunction($propertyName, $property['type'], $blueprint);
+            $value = $this->castInMapperFunction($value, $property['type'], $blueprint);
             if (\array_key_exists('default', $property)) {
-                $propertyMap = $this->wrapDefault($propertyMap, $name, $property['default']);
+                $value = $this->wrapDefault($value, $name, $property['default']);
             }
 
-            $propertySet = \PHP_EOL . $tab . $tab . '$x->' . $name . ' = ' . $propertyMap . ';';
+            $value = new Assign(
+                new PropertyFetch(
+                    new Variable('x'),
+                    $name,
+                ),
+                $value,
+            );
 
             if ($this->mapper->config->allowUninitializedFields && ! \array_key_exists('default', $property)) {
-                $propertySet = $this->wrapArrayKeyExists($propertySet, $name);
+                $value = $this->wrapArrayKeyExists($value, $name);
             }
 
-            $content .= $propertySet;
+            if ($value instanceof Expr) {
+                $ast[] = new Stmt\Expression($value);
+            } else {
+                $ast[] = $value;
+            }
         }
 
         // Post mapping functions?
         foreach ($blueprint->classAttributes as $attribute) {
             if ($attribute instanceof PostMapping) {
                 if (\is_string($attribute->postMappingCallback)) {
-                    $content.= \PHP_EOL . \PHP_EOL . $tab . $tab . "\$x->{$attribute->postMappingCallback}(\$data, \$x);";
+                    $ast[] = new Stmt\Expression(
+                        new Expr\MethodCall(
+                            new Variable('x'),
+                            $attribute->postMappingCallback,
+                            [
+                                new Arg(new Variable('data')),
+                                new Arg(new Variable('x')),
+                            ],
+                        ),
+                    );
                 } else {
-                    $content.= \PHP_EOL . \PHP_EOL . $tab . $tab . "\call_user_func({$attribute->postMappingCallback}, \$data, \$x);";
+                    $ast[] = new Stmt\Expression(
+                        new FuncCall(
+                            new Name\FullyQualified('call_user_func'),
+                            [
+                                new Arg(new ConstFetch(new Name($attribute->postMappingCallback))),
+                                new Arg(new Variable('data')),
+                                new Arg(new Variable('x')),
+                            ],
+                        ),
+                    );
                 }
             }
         }
 
-        // Render the function
-        $mapperClass = Mapper::class;
-        return <<<PHP
-        <?php
+        // Return the result!
+        $ast[] = new Stmt\Return_(new Variable('x'));
 
-        if (! \\function_exists('{$mapFunctionName}')) {
-            function {$mapFunctionName}({$mapperClass} \$mapper, array \$data)
-            {
-        {$content}
+        // Make sure not to define the function twice
+        $tree = new Stmt\If_(
+            new Expr\BooleanNot(
+                new FuncCall(
+                    new Name\FullyQualified('function_exists'),
+                    [
+                        new Arg(new String_($mapFunctionName)),
+                    ],
+                ),
+            ),
+            [
+                'stmts' => [
+                    new Stmt\Function_(
+                        new Identifier($mapFunctionName),
+                        [
+                            'params' => [
+                                new Param(new Variable('mapper'), null, new Name\FullyQualified(Mapper::class)),
+                                new Param(new Variable('data')),
+                            ],
+                            'stmts' => $ast,
+                        ],
+                    ),
+                ],
+            ],
+        );
 
-                return \$x;
-            }
-        }
-        PHP;
+        return '<?php ' . PHP_EOL . PHP_EOL . $this->prettyPrinter->prettyPrint([$tree]);
     }
 
-    private function castInMapperFunction(string $propertyName, DataTypeCollection $type, ClassBluePrint $bluePrint): string
+    private function castInMapperFunction(Expr $value, DataTypeCollection $type, ClassBluePrint $bluePrint): Expr
     {
         if (\count($type->types) === 1) {
             $type = $type->types[0];
 
             if ($type->isNullable) {
-                return "{$propertyName} === null ? null : " . $this->castInMapperFunction($propertyName, new DataTypeCollection([$type->removeNullable()]), $bluePrint);
+                return new Ternary(
+                    new Identical(
+                        $value,
+                        new ConstFetch(new Name('null')),
+                    ),
+                    new ConstFetch(new Name('null')),
+                    $this->castInMapperFunction($value, new DataTypeCollection([$type->removeNullable()]), $bluePrint),
+                );
             }
 
             if ($type->isNative()) {
                 return match ($type->type) {
-                    'null' => 'null',
-                    'bool' => "\\filter_var({$propertyName}, \FILTER_VALIDATE_BOOL)",
-                    'float' => '(float) ' . $propertyName,
-                    'int' => '(int) ' . $propertyName,
-                    'string' => '(string) ' . $propertyName,
-                    'object' => '(object) ' . $propertyName,
-                    default => $propertyName,
+                    'null' => new ConstFetch(new Name('null')),
+                    'bool' => new FuncCall(new Name\FullyQualified('filter_var'), [$value, new ConstFetch(new Name\FullyQualified('FILTER_VALIDATE_BOOL'))]),
+                    'float' => new Expr\Cast\Double($value, ['kind' => Expr\Cast\Double::KIND_FLOAT]),
+                    'int' => new Expr\Cast\Int_($value),
+                    'string' => new Expr\Cast\String_($value),
+                    'object' => new Expr\Cast\Object_($value),
+                    default => $value,
                 };
             }
 
             if ($type->isArray()) {
                 if ($type->isGenericArray()) {
-                    return '(array) ' . $propertyName;
+                    return new Expr\Cast\Array_($value);
                 }
                 if (\count($type->genericTypes) === 1) {
-                    $uniqid = \uniqid();
-                    return "\\array_map(static fn (\$x{$uniqid}) => " . $this->castInMapperFunction('$x' . $uniqid, $type->genericTypes[0], $bluePrint) . ", {$propertyName})";
+                    $uniqid = \uniqid('x');
+                    return new FuncCall(
+                        new Name\FullyQualified('array_map'),
+                        [
+                            new Arg(
+                                new Expr\ArrowFunction(
+                                    [
+                                        'params' => [
+                                            new Param(new Variable($uniqid)),
+                                        ],
+                                        'expr' => $this->castInMapperFunction(new Variable($uniqid), $type->genericTypes[0], $bluePrint),
+                                    ],
+                                ),
+                            ),
+                            new Arg($value),
+                        ],
+                    );
                 }
             }
 
             if (\is_subclass_of($type->type, \BackedEnum::class)) {
                 $enumFunction = $this->mapper->config->enumTryFrom ? 'tryFrom' : 'from';
 
-                return "{$type->type}::{$enumFunction}({$propertyName})";
+                return new Expr\StaticCall(
+                    new Name($type->type),
+                    $enumFunction,
+                    [
+                        new Arg($value),
+                    ],
+                );
             }
 
             if (\is_subclass_of($type->type, MapsItself::class)) {
-                return "{$type->type}::mapSelf({$propertyName}, \$mapper)";
+                return new Expr\StaticCall(
+                    new Name($type->type),
+                    'mapSelf',
+                    [
+                        new Arg($value),
+                        new Variable('mapper'),
+                    ],
+                );
             }
 
             $className = $this->dataTypeFactory->print($type, $bluePrint->fileName);
             if (\class_exists($className)) {
-                return "\$mapper->objectMapper->map('{$className}', {$propertyName})";
+                return new Expr\MethodCall(
+                    new Expr\PropertyFetch(
+                        new Variable('mapper'),
+                        'objectMapper',
+                    ),
+                    'map',
+                    [
+                        new Arg(new String_($className)),
+                        new Arg($value),
+                    ],
+                );
             }
         }
 
-        return '$mapper->map(\'' . $this->dataTypeFactory->print($type, $bluePrint->fileName) . '\', ' . $propertyName . ')';
+        return new Expr\MethodCall(
+            new Variable('mapper'),
+            'map',
+            [
+                new Arg(new String_($this->dataTypeFactory->print($type, $bluePrint->fileName))),
+                new Arg($value),
+            ],
+        );
     }
 
-    private function wrapDefault(string $value, string $arrayKey, mixed $defaultValue): string
+    private function wrapDefault(Expr $value, string $arrayKey, mixed $defaultValue): Expr
     {
-        if (\str_contains($value, '?')) {
-            $value = "({$value})";
-        }
-
         if (\is_object($defaultValue)) {
-            $defaultRaw = 'new ' . $defaultValue::class . '()';
+            $defaultRaw = new New_(new Name($defaultValue::class));
         } else {
-            $defaultRaw = \var_export($defaultValue, true);
+            $defaultRaw = new ConstFetch(new Name(\var_export($defaultValue, true)));
         }
 
-        return "(\\array_key_exists('{$arrayKey}', \$data) ? {$value} : {$defaultRaw})";
+        return new Ternary(
+            new FuncCall(
+                new Name\FullyQualified('array_key_exists'),
+                [
+                    new Arg(new String_($arrayKey)),
+                    new Arg(new Variable('data')),
+                ],
+            ),
+            $value,
+            $defaultRaw,
+        );
     }
 
-    private function wrapArrayKeyExists(string $expression, string $arrayKey): string
+    /** @param Node|array<Node> $expression */
+    private function wrapArrayKeyExists(Node|array $expression, string $arrayKey): Stmt\If_
     {
-        $content  = \PHP_EOL . \str_repeat('    ', 2) . "if (\\array_key_exists('{$arrayKey}', \$data)) {";
-        $content .= \str_replace(\PHP_EOL, \PHP_EOL . '    ', $expression) . \PHP_EOL;
-        $content .= \str_repeat('    ', 2) . '}';
-
-        return $content;
+        return new Stmt\If_(
+            new FuncCall(
+                new Name\FullyQualified('array_key_exists'),
+                [
+                    new Arg(new String_($arrayKey)),
+                    new Arg(new Variable('data')),
+                ],
+            ),
+            [
+                'stmts' => \is_array($expression)
+                    ? $expression
+                    : [
+                        $expression instanceof Expr ? new Stmt\Expression($expression) : $expression,
+                    ],
+            ],
+        );
     }
 
     public function __destruct()
@@ -256,19 +433,68 @@ class ObjectMapper
         }
     }
 
-    /** @param array{type: DataTypeCollection, default?: mixed} $property */
-    private function buildPropertyForeachMapping(string $propertyName, array $property, ClassBluePrint $blueprint): string
+    /**
+     * @param array{type: DataTypeCollection, default?: mixed} $property
+     * @return array<Stmt>
+     */
+    private function buildPropertyForeachMapping(string $propertyName, array $property, ClassBluePrint $blueprint): array
     {
-        $foreach  = \PHP_EOL . \str_repeat('    ', 2) . '$x->' . $propertyName . ' = [];';
-        $foreach .= \PHP_EOL . \str_repeat('    ', 2) . 'foreach ($data[\'' . $propertyName . '\'] as $key => $value) {';
-        $foreach .= \PHP_EOL . \str_repeat('    ', 3) . '$x->' . $propertyName . '[' . $this->castInMapperFunction('$key', $property['type']->types[0]->genericTypes[0], $blueprint) .  '] = ';
-        $foreach .= $this->castInMapperFunction('$value', $property['type']->types[0]->genericTypes[1], $blueprint) . ';';
-        $foreach .= \PHP_EOL . \str_repeat('    ', 2) . '}';
+        $ast = [];
+        $ast[] = new Stmt\Expression(
+            new Assign(
+                new PropertyFetch(
+                    new Variable('x'),
+                    $propertyName,
+                ),
+                new Array_(attributes: ['kind' => Array_::KIND_SHORT]),
+            ),
+        );
+
+        $ast[] = new Stmt\Foreach_(
+            new ArrayDimFetch(
+                new Variable('data'),
+                new String_($propertyName),
+            ),
+            new Variable('value'),
+            [
+                'keyVar' => new Variable('key'),
+                'stmts' => [
+                    new Stmt\Expression(
+                        new Assign(
+                            new ArrayDimFetch(
+                                new PropertyFetch(
+                                    new Variable('x'),
+                                    $propertyName,
+                                ),
+                                $this->castInMapperFunction(new Variable('key'), $property['type']->types[0]->genericTypes[0], $blueprint),
+                            ),
+                            $this->castInMapperFunction(new Variable('value'), $property['type']->types[0]->genericTypes[1], $blueprint),
+                        ),
+                    ),
+                ],
+            ],
+        );
 
         if (\array_key_exists('default', $property) || $this->mapper->config->allowUninitializedFields) {
-            $foreach = $this->wrapArrayKeyExists($foreach, $propertyName);
+            $if = $this->wrapArrayKeyExists($ast, $propertyName);
+
+            if (\array_key_exists('default', $property)) {
+                $if->else = new Stmt\Else_([
+                    new Stmt\Expression(
+                        new Assign(
+                            new PropertyFetch(
+                                new Variable('x'),
+                                $propertyName,
+                            ),
+                            new ConstFetch(new Name(\var_export($property['default'], true))),
+                        ),
+                    ),
+                ]);
+            }
+
+            $ast = [$if];
         }
 
-        return $foreach;
+        return $ast;
     }
 }

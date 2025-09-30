@@ -9,14 +9,14 @@ use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ClassBluePrinterTest extends TestCase
 {
-    /**
-     * @test
-     * @dataProvider classBlueprintDataProvider
-     */
+    #[Test]
+    #[DataProvider('classBlueprintDataProvider')]
     public function it_should_blueprint_classes(string $className, array $constructorArguments = [], array $properties = []): void
     {
         $blueprint = (new ClassBluePrinter())->print($className);

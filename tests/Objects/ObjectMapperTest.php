@@ -8,12 +8,13 @@ use Jerodev\DataMapper\Objects\ObjectMapper;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Types\DataType;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ValueError;
 
-class ObjectMapperTest extends TestCase
+final class ObjectMapperTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_should_generate_cache_key_based_on_config(): void
     {
         $classname = 'A' . \uniqid();
@@ -65,7 +66,7 @@ class ObjectMapperTest extends TestCase
         \unlink($filename);
     }
 
-    /** @test */
+    #[Test]
     public function it_should_let_classes_map_themselves(): void
     {
         $value = (new ObjectMapper(new Mapper()))->map(
@@ -81,7 +82,7 @@ class ObjectMapperTest extends TestCase
         $this->assertEquals(['John Doe', 'Jane Doe'], $value->users);
     }
 
-    /** @test */
+    #[Test]
     public function it_should_not_retain_mapper_files_in_debug_mode(): void
     {
         $config = new MapperConfig();
@@ -99,7 +100,7 @@ class ObjectMapperTest extends TestCase
         $this->assertEmpty(\glob($filePattern));
     }
 
-    /** @test */
+    #[Test]
     public function it_should_parse_enum_using_tryfrom_if_configured(): void
     {
         $config = new MapperConfig();
@@ -113,7 +114,7 @@ class ObjectMapperTest extends TestCase
         $this->assertNull($value);
     }
 
-    /** @test */
+    #[Test]
     public function it_should_save_mappers_in_cache_directory(): void
     {
         $config = new MapperConfig();
@@ -131,7 +132,7 @@ class ObjectMapperTest extends TestCase
         \rmdir($config->classMapperDirectory);
     }
 
-    /** @test */
+    #[Test]
     public function it_should_throw_on_invalid_enum_value(): void
     {
         $this->expectException(ValueError::class);

@@ -7,23 +7,21 @@ use Jerodev\DataMapper\Exceptions\UnexpectedTokenException;
 use Jerodev\DataMapper\Types\DataType;
 use Jerodev\DataMapper\Types\DataTypeCollection;
 use Jerodev\DataMapper\Types\DataTypeFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class DataTypeFactoryTest extends TestCase
 {
-    /**
-     * @test
-     * @dataProvider singleDataTypeProvider
-     */
+    #[Test]
+    #[DataProvider('singleDataTypeProvider')]
     public function it_should_parse_single_data_types(string $input, DataType $expectation): void
     {
         $this->assertEquals($expectation, (new DataTypeFactory())->fromString($input)->types[0]);
     }
 
-    /**
-     * @test
-     * @dataProvider unexpectedTokenDataProvider
-     */
+    #[Test]
+    #[DataProvider('unexpectedTokenDataProvider')]
     public function it_should_throw_unexpected_token(string $input): void
     {
         $this->expectException(UnexpectedTokenException::class);
@@ -31,10 +29,8 @@ final class DataTypeFactoryTest extends TestCase
         (new DataTypeFactory())->fromString($input);
     }
 
-    /**
-     * @test
-     * @dataProvider typeToStringDataProvider
-     */
+    #[Test]
+    #[DataProvider('typeToStringDataProvider')]
     public function it_should_parse_and_convert_back_to_string(string $input, string $expectation): void
     {
         $factory = new DataTypeFactory();

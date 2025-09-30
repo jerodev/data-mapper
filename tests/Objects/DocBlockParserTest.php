@@ -4,14 +4,14 @@ namespace Jerodev\DataMapper\Tests\Objects;
 
 use Generator;
 use Jerodev\DataMapper\Objects\DocBlockParser;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class DocBlockParserTest extends TestCase
 {
-    /**
-     * @test
-     * @dataProvider docBlockDataProvider
-     */
+    #[Test]
+    #[DataProvider('docBlockDataProvider')]
     public function it_should_parse_doc_blocks(string $input, array $paramTypes = [], ?string $returnType = null, ?string $varType = null): void
     {
         $doc = (new DocBlockParser())->parse($input);

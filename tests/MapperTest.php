@@ -14,20 +14,20 @@ use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Tests\_Mocks\SuperUserDto;
 use Jerodev\DataMapper\Tests\_Mocks\UserDto;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class MapperTest extends TestCase
 {
-    /**
-     * @test
-     * @dataProvider nativeValuesDataProvider
-     */
+    #[Test]
+    #[DataProvider('nativeValuesDataProvider')]
     public function it_should_map_native_values(string $type, mixed $value, mixed $expectation): void
     {
         $this->assertSame($expectation, (new Mapper())->map($type, $value));
     }
 
-    /** @test */
+    #[Test]
     public function it_should_map_nullable_objects_from_empty_array(): void
     {
         $options = new MapperConfig();
@@ -41,10 +41,8 @@ final class MapperTest extends TestCase
         $this->assertInstanceOf(Nullable::class, $mapper->map(Nullable::class, []));
     }
 
-    /**
-     * @test
-     * @dataProvider objectValuesDataProvider
-     */
+    #[Test]
+    #[DataProvider('objectValuesDataProvider')]
     public function it_should_map_objects(string $type, mixed $value, mixed $expectation): void
     {
         $config = new MapperConfig();
@@ -53,7 +51,7 @@ final class MapperTest extends TestCase
         $this->assertEquals($expectation, (new Mapper($config))->map($type, $value));
     }
 
-    /** @test */
+    #[Test]
     public function it_should_throw_on_unexpected_null_value(): void
     {
         $config = new MapperConfig();

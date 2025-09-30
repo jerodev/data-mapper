@@ -31,14 +31,8 @@ class ClassResolver
         $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 10);
         $mapperFileSuffix = \implode(\DIRECTORY_SEPARATOR, ['data-mapper', 'src', 'Mapper.php']);
 
-        $foundMapper = false;
         foreach ($backtrace as $trace) {
-            if (\str_ends_with($trace['file'], $mapperFileSuffix)) {
-                $foundMapper = true;
-                continue;
-            }
-
-            if ($foundMapper) {
+            if (\array_key_exists('file', $trace) && \str_ends_with($trace['file'], $mapperFileSuffix)) {
                 return $trace['file'];
             }
         }

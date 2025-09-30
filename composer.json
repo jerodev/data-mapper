@@ -30,7 +30,7 @@
     },
     "require-dev": {
         "jerodev/code-styles": "dev-master",
-        "phpunit/phpunit": "^9.4"
+        "phpunit/phpunit": "^10"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

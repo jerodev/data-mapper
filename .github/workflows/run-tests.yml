@@ -1,47 +1,50 @@
 name: run-tests
 
 on:
-  - pull_request
+    pull_request:
+    push:
+        branches:
+            - master
 
 jobs:
-  run-test:
-    name: PHP ${{ matrix.php }}
-    runs-on: ubuntu-latest
+    run-test:
+        name: PHP ${{ matrix.php }}
+        runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        php:
-          - 8.1
-          - 8.2
-          - 8.3
-          - 8.4
-          - 8.5
+        strategy:
+            matrix:
+                php:
+                    - 8.1
+                    - 8.2
+                    - 8.3
+                    - 8.4
+                    - 8.5
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v3
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-            path: |
-                .phpstan-cache
-                vendor
-            key: composer-${{ hashFiles('composer.json') }}
+            -   name: Cache dependencies
+                uses: actions/cache@v3
+                with:
+                    path: |
+                        .phpstan-cache
+                        vendor
+                    key: composer-${{ hashFiles('composer.json') }}
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: json
-          coverage: none
-          tools: composer:v2
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php }}
+                    extensions: json
+                    coverage: none
+                    tools: composer:v2
 
-      - name: Install dependencies
-        run: composer update --no-interaction
+            -   name: Install dependencies
+                run: composer update --no-interaction
 
-      - name: Code Styles
-        run: vendor/bin/phpcs -p
+            -   name: Code Styles
+                run: vendor/bin/phpcs -p
 
-      - name: Execute tests
-        run: vendor/bin/phpunit
+            -   name: Execute tests
+                run: vendor/bin/phpunit

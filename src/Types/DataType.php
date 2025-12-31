@@ -46,6 +46,7 @@ class DataType
                 'int',
                 'string',
                 'object',
+                'mixed',
             ],
         );
     }

@@ -42,6 +42,11 @@ class Mapper
             );
         }
 
+        // Mixed does not give any information, just return the data as is
+        if (\count($typeCollection->types) === 1 && $typeCollection->types[0]->type === 'mixed') {
+            return $data;
+        }
+
         if ($data === 'null' || $data === null) {
             if ($this->config->strictNullMapping === false || $typeCollection->isNullable()) {
                 return null;
@@ -87,6 +92,7 @@ class Mapper
             'float' => (float) $data,
             'string' => (string) $data,
             'object' => (object) $data,
+            'mixed' => $data,
             default => throw new CouldNotMapValueException($data, $type),
         };
     }

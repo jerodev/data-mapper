@@ -65,6 +65,9 @@ final class MapperTest extends TestCase
     public static function nativeValuesDataProvider(): Generator
     {
         yield ['null', null, null];
+        yield ['mixed', null, null];
+        yield ['mixed', 5, 5];
+        yield ['mixed', '5', '5'];
 
         yield ['array', [1, 'b'], [1, 'b']];
 

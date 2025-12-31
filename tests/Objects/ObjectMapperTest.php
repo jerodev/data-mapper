@@ -5,6 +5,7 @@ namespace Jerodev\DataMapper\Tests\Objects;
 use Jerodev\DataMapper\Mapper;
 use Jerodev\DataMapper\MapperConfig;
 use Jerodev\DataMapper\Objects\ObjectMapper;
+use Jerodev\DataMapper\Tests\_Mocks\MixedParam;
 use Jerodev\DataMapper\Tests\_Mocks\SelfMapped;
 use Jerodev\DataMapper\Tests\_Mocks\SuitEnum;
 use Jerodev\DataMapper\Types\DataType;
@@ -141,5 +142,14 @@ final class ObjectMapperTest extends TestCase
             new DataType(SuitEnum::class, false),
             'x',
         );
+    }
+
+    #[Test]
+    public function it_should_return_mixed_parameters_as_is(): void
+    {
+        $data = (new ObjectMapper(new Mapper()))->map(MixedParam::class, ['key' => 'value', 'data' => 37.5]);
+
+        $this->assertEquals('value', $data->key);
+        $this->assertEquals(37.5, $data->data);
     }
 }

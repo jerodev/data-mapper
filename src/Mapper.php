@@ -28,9 +28,10 @@ class Mapper
     /**
      * Map anything!
      *
-     * @param DataTypeCollection|string $typeCollection The type to map to.
+     * @template CLASS
+     * @param DataTypeCollection|string|class-string<CLASS> $typeCollection The type to map to.
      * @param mixed $data Deserialized data to map to the type.
-     * @return mixed
+     * @return ($typeCollection is class-string ? CLASS : mixed)
      */
     public function map($typeCollection, $data)
     {
